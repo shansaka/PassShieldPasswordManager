@@ -1,4 +1,4 @@
 ﻿using PassShieldPasswordManager;
 
-var menu = new Menu();
-menu.Run();
+var ui = new UserInterface();
+await ui.Run();
