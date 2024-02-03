@@ -14,6 +14,7 @@ public class AutoMapperConfiguration
         var config = new MapperConfiguration(cfg => {
             cfg.CreateMap<UserModel, Admin>();
             cfg.CreateMap<UserModel, User>();
+            cfg.CreateMap<SecurityQuestionModel, SecurityQuestion>();
         });
 
         _mapper = config.CreateMapper();

@@ -9,11 +9,3 @@ public class User : UserModel
         return 0;
     }
 }
-
-public class Admin : User
-{
-    public bool DeleteUsers()
-    {
-        return true;
-    }
-}

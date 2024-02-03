@@ -1,18 +1,15 @@
-using Dapper;
-using Microsoft.Data.Sqlite;
-using System;
-using System.Collections.Generic;
 using PassShieldPasswordManager.Models;
+
+namespace PassShieldPasswordManager;
 
 public class DbConnection
 {
     private static DbConnection _instance;
-    private SqliteConnection _db;
+    private Context _db;
     
     private DbConnection()
     {
-        string connectioString = "pass_db.db";
-        _db = new SqliteConnection($"Data Source={connectioString}"); 
+        _db = new Context();
     }
 
     public static DbConnection Instance
@@ -27,7 +24,7 @@ public class DbConnection
         }
     }
 
-    public SqliteConnection Db
+    public Context Db
     {
         get { return _db; }
     }

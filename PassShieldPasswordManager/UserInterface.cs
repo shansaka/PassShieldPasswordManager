@@ -5,7 +5,8 @@ namespace PassShieldPasswordManager
     public class UserInterface
     {
         private readonly Account _account = new();
-
+        private readonly SecurityQuestion _securityQuestion = new();
+        
         public async Task Run()
         {
             try
@@ -52,24 +53,65 @@ namespace PassShieldPasswordManager
 
             var newUser = new User();
             newUser.Name = AnsiConsole.Ask<string>("Enter [green]Name[/] :");
-            newUser.Username = AnsiConsole.Ask<string>("Enter [green]Username[/] :");
-            newUser.Password = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [green]Password[/] :")
-                    .PromptStyle("red")
-                    .Secret()
-            );
-            newUser.SecurityQuestionId = AnsiConsole.Prompt(
-                new SelectionPrompt<int>()
-                    .Title("Select [green]Security Question[/] :")
-                    .PageSize(10)
-                    .AddChoices(new[] {
-                        1,
-                        2,
-                        3
-                    }));
-            newUser.SecurityAnswer = AnsiConsole.Ask<string>("Enter [green]Security Answer[/] :");
+
+            var usernameExists = true;
+            while (usernameExists)
+            {
+                newUser.Username = AnsiConsole.Ask<string>("Enter [green]Username[/] :");
+
+                usernameExists = await _account.VerifyUsername(newUser.Username);
+                if (usernameExists)
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.Markup("[red]Username already exists[/], please try again.");
+                    AnsiConsole.WriteLine();
+                }
+            }
+            
+            var passwordMatched = false;
+            while (!passwordMatched)
+            {
+                newUser.Password = AnsiConsole.Prompt(
+                    new TextPrompt<string>("Enter [green]Password[/] :")
+                        .PromptStyle("red")
+                        .Secret()
+                );
+                var confirmPassword = AnsiConsole.Prompt(
+                    new TextPrompt<string>("Enter [green]Password[/] Again :")
+                        .PromptStyle("red")
+                        .Secret()
+                );
+
+                if (newUser.Password == confirmPassword)
+                {
+                    passwordMatched = true;
+                }
+                else
+                {
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.Markup("[red]Password does not matched[/], please try again.");
+                    AnsiConsole.WriteLine();
+                }
+            }
+            
+            var securityQuestionList = await _securityQuestion.GetList();
+            
+            if (securityQuestionList.Any())
+            {
+                var question  = AnsiConsole.Prompt(
+                    new SelectionPrompt<string>()
+                        .Title("Select [green]Security Question[/] :")
+                        .PageSize(10)
+                        .AddChoices(securityQuestionList.Select(x => x.Question).ToArray())
+                    );
+                newUser.SecurityQuestionId = securityQuestionList.FirstOrDefault(x => x.Question == question)!.SecurityQuestionId;
+                newUser.SecurityAnswer = AnsiConsole.Ask<string>("Enter [green]Security Answer[/] :");
+            }
+            
             newUser.DateCreated = DateTime.Now;
+            
             newUser = await _account.Register(newUser);
+            
         }
 
         private async Task Exit()
@@ -106,6 +148,11 @@ namespace PassShieldPasswordManager
                     .PromptStyle("red")
                     .Secret()
                 );
+            var confirmPassword = AnsiConsole.Prompt(
+                new TextPrompt<string>("Enter [green]Password again[/] :")
+                    .PromptStyle("red")
+                    .Secret()
+            );
 
             // Checking login here.
             var user = await _account.Login(username, password);

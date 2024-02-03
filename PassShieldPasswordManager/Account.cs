@@ -6,7 +6,6 @@ namespace PassShieldPasswordManager;
 public class Account
 {
     private readonly UserRepo _userRepo = new();
-    public User User { get; set; }
     private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
 
     public async Task<User> Login(string username, string password)
@@ -14,7 +13,12 @@ public class Account
         try
         {
             var user = await _userRepo.Login(username, password);
-            return user.IsAdmin ? _mapper.Map<Admin>(user) : _mapper.Map<User>(user);
+            if (user != null)
+            {
+                return user.IsAdmin ? _mapper.Map<Admin>(user) : _mapper.Map<User>(user);
+            }
+
+            return null;
         }
         catch (Exception e)
         {
@@ -28,6 +32,19 @@ public class Account
         try
         {
             return _mapper.Map<User>(await _userRepo.CreateUser(user));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task<bool> VerifyUsername(string username)
+    {
+        try
+        {
+            return await _userRepo.VerifyUsername(username);
         }
         catch (Exception e)
         {
