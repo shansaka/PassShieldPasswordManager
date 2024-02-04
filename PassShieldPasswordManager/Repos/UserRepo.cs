@@ -1,5 +1,3 @@
-using AutoMapper;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
 
@@ -9,18 +7,13 @@ public class UserRepo
 {
     private readonly DbConnection _dbConnection = DbConnection.Instance;
     
-    public async Task<UserModel> Login(string username, string password)
+    public async Task<Users> Login(string username, string password)
     {
         try
         {
-            // var query = "SELECT * FROM Users WHERE Username=@Username AND Password=@Password";
-            // var result = await _dbConnection.Db.QueryFirstOrDefaultAsync<UserModel>(query,
-            //     new
-            //     {
-            //         Username = username,
-            //         Password = password
-            //     });
-
+            // Encrypting the password
+            password = new Encryption(password).CreateSha512();
+            
             var result =
                 await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.Username == username && x.Password == password);
             
@@ -33,14 +26,12 @@ public class UserRepo
         }
     }
 
-    public async Task<User> CreateUser(User user)
+    public async Task<Users> CreateUser(Users user)
     {
         try
         {
-            // var query = "INSERT INTO Users (Name, Username, Password, SecurityQuestionId, SecurityAnswer) VALUES @Name, @Username, @Password, @SecurityQuestionId, @SecurityAnswer, @DateCreated";
-            // var result = await _dbConnection.Db.ExecuteScalarAsync<UserModel>(query, user);
-            //return result;
-            _dbConnection.Db.Users.Add(user);
+            user.Password = new Encryption(user.Password).CreateSha512();
+            await _dbConnection.Db.Users.AddAsync(user);
             var id = await _dbConnection.Db.SaveChangesAsync();
             user.UserId = id;
             return user;
@@ -52,12 +43,44 @@ public class UserRepo
         }
     }
 
-    public async Task<bool> VerifyUsername(string username)
+    public async Task<Users> GetByUsername(string username)
     {
         try
         {
             var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.Username == username);
-            return result != null;
+            return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<bool> VerifySecurityAnswer(int userId, int securityQuestionId, string securityAnswer)
+    {
+        try
+        {
+            var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.SecurityQuestionId == securityQuestionId);
+            return result != null && result.SecurityAnswer == securityAnswer;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task ResetPassword(int userId, string newPassword)
+    {
+        try
+        {
+            var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (result != null)
+            {
+                result.Password = new Encryption(newPassword).CreateSha512();
+                await _dbConnection.Db.SaveChangesAsync();
+            }
         }
         catch (Exception e)
         {

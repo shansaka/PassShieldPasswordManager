@@ -6,8 +6,10 @@ using System.Collections.Generic;
 
 public class Context : DbContext
 {
-    public DbSet<UserModel> Users { get; set; }
-    public DbSet<SecurityQuestionModel> SecurityQuestions { get; set; }
+    public DbSet<Users> Users { get; set; }
+    public DbSet<SecurityQuestions> SecurityQuestions { get; set; }
+    
+    public DbSet<Credentials> Credentials { get; set; }
 
     public string DbPath { get; }
 

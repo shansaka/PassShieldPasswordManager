@@ -31,7 +31,8 @@ public class Account
     {
         try
         {
-            return _mapper.Map<User>(await _userRepo.CreateUser(user));
+            var users = _mapper.Map<Users>(user);
+            return _mapper.Map<User>(await _userRepo.CreateUser(users));
         }
         catch (Exception e)
         {
@@ -40,11 +41,37 @@ public class Account
         }
     }
     
-    public async Task<bool> VerifyUsername(string username)
+    public async Task<User> VerifyUsername(string username)
     {
         try
         {
-            return await _userRepo.VerifyUsername(username);
+            return _mapper.Map<User>(await _userRepo.GetByUsername(username));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<bool> VerifySecurityAnswer(int userId, int securityQuestionId, string securityAnswer)
+    {
+        try
+        {
+            return await _userRepo.VerifySecurityAnswer(userId, securityQuestionId, securityAnswer);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task ResetPassword(int userId, string newPassword)
+    {
+        try
+        {
+            await _userRepo.ResetPassword(userId, newPassword);
         }
         catch (Exception e)
         {

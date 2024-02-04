@@ -1,5 +1,3 @@
-using AutoMapper;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
 
@@ -9,29 +7,10 @@ public class SecurityQuestionRepo
 {
     private readonly DbConnection _dbConnection = DbConnection.Instance;
     
-    public async Task<List<SecurityQuestionModel>> GetList()
+    public async Task<List<SecurityQuestions>> GetList()
     {
         try
         {
-            // var query = "SELECT * FROM SecurityQuestions";
-            // var result = await _dbConnection.Db.QueryFirstOrDefaultAsync<List<SecurityQuestionModel>>(query);
-            // if (result == null || !result.Any())
-            // {
-            //     query = "INSERT INTO SecurityQuestions (Question) VALUES (@Question)";
-            //     await _dbConnection.Db.ExecuteAsync(query, new
-            //     {
-            //         Question = "What's your first pet name?"
-            //     });
-            //     
-            //     await _dbConnection.Db.ExecuteAsync(query, new
-            //     {
-            //         Question = "What city you have born?"
-            //     });
-            //     
-            //     result = await _dbConnection.Db.QueryFirstOrDefaultAsync<List<SecurityQuestionModel>>(query);ß
-            // }
-            // return result;
-
             var result = await _dbConnection.Db.SecurityQuestions.ToListAsync();
             if (!result.Any())
             {
@@ -52,6 +31,19 @@ public class SecurityQuestionRepo
                 result = await _dbConnection.Db.SecurityQuestions.ToListAsync();
             }
             return result;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<SecurityQuestions> GetById(int id)
+    {
+        try
+        {
+            return await _dbConnection.Db.SecurityQuestions.FirstOrDefaultAsync(x => x.SecurityQuestionId == id);
         }
         catch (Exception e)
         {
