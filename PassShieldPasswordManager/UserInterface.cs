@@ -1,4 +1,4 @@
-using PassShieldPasswordManager.Models;
+ using PassShieldPasswordManager.Utilities;
 using Spectre.Console;
 
 namespace PassShieldPasswordManager
@@ -7,7 +7,6 @@ namespace PassShieldPasswordManager
     {
         private readonly Account _account = new();
         private readonly SecurityQuestion _securityQuestion = new();
-        private readonly Credential _credential = new();
         private readonly LoginSession _loginSession = LoginSession.Instance;
         
         public async Task Run()
@@ -209,16 +208,13 @@ namespace PassShieldPasswordManager
 
         private async Task ResetPassword()
         {
-            AnsiConsole.Markup("[red]Foo[/] ");
-            AnsiConsole.Markup("[#ff0000]Bar[/] ");
-            AnsiConsole.Markup("[rgb(255,0,0)]Baz[/] ");
-            
             
             var userId = 0;
             var securityQuestionId = 0;
             var securityAnswer = "";
             
             var usernameExists = false;
+            var count = 0;
             while (!usernameExists)
             {
                 var username = AnsiConsole.Ask<string>("Enter [green]Username[/] :");
@@ -227,7 +223,7 @@ namespace PassShieldPasswordManager
                 if (user == null)
                 {
                     AnsiConsole.WriteLine();
-                    AnsiConsole.Markup("[red]Username already exists[/], please try again.");
+                    AnsiConsole.Markup("[red]Username not found[/], please try again.");
                     AnsiConsole.WriteLine();
                 }
                 else
@@ -240,6 +236,15 @@ namespace PassShieldPasswordManager
                         securityAnswer = AnsiConsole.Ask<string>($"{securityQuestion.Question} ?");
                     }
                     userId = user.UserId;
+                }
+
+                count++;
+                if (count == 3)
+                {
+                    AnsiConsole.MarkupLine("[red]You have entered wrong usernames more than 3 times[/] Press any key to go back");
+                    Console.ReadKey();
+                    await ApplicationMenu();
+                    return;
                 }
             }
 
@@ -316,12 +321,12 @@ namespace PassShieldPasswordManager
             {
                 "Create New Credential",
                 "View Credentials",
-                "Search Credential"
+                "Search Credentials"
             };
             
             if (_loginSession.User is Admin)
             {
-                choicesList.Add("View All Passwords");
+                choicesList.Add("Admin Management");
             }
             
             choicesList.Add( "Logout");
@@ -334,14 +339,17 @@ namespace PassShieldPasswordManager
 
             switch (selection)
             {
-                case "Create New Password":
+                case "Create New Credential":
                     await CreateNewCredential();
                     break; 
                 case "View Credentials":
                     await ViewCredentials();
                     break;
                 case "Search Credentials":
-                    await ViewCredentials();
+                    await SearchCredential();
+                    break;
+                case "Admin Management":
+                    await AdminMenu();
                     break;
                 case "Logout":
                     _loginSession.Logout();
@@ -350,6 +358,255 @@ namespace PassShieldPasswordManager
                 case "Exit":
                     await Exit();
                     break;
+            }
+        }
+
+        private async Task AdminMenu()
+        {
+            NewView();
+
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "View All Credentials",
+                        "View Users",
+                        "Back"
+                    }));
+
+            switch (selection)
+            {
+                case "View All Credentials":
+                    await ViewAllCredentials();
+                    break;
+                case "View Users":
+                    await ViewUsers(); 
+                    break;
+                case "Back":
+                    await MainMenu();
+                    break;
+            }
+        }
+
+        private async Task ViewUsers()
+        {
+            Console.Clear();
+            if (_loginSession.User is Admin admin)
+            {
+                var users = await admin.ViewUsers();
+                users.RemoveAll(x => x.UserId == _loginSession.User.UserId);
+                
+                if (!users.Any())
+                {
+                    AnsiConsole.MarkupLine("[green]Can't find any users[/] Press any key to go back");
+                    Console.ReadKey();
+                    await AdminMenu();
+                }
+                
+                var selectedRowIndex = 0;
+
+                while (true)
+                {
+                    // Display the table
+                    var table = new Table();
+                    table.AddColumn("Name");
+                    table.AddColumn("Username");
+                    table.AddColumn("Is Admin");
+                    table.AddColumn("Created Date");
+                   
+
+                    for (var i = 0; i < users.Count; i++)
+                    {
+                        var user = users[i];
+                        var style = i == selectedRowIndex ? "[bold red]" : "[]";
+                        var isAdmin = "No";
+
+                        if (user is Admin adminUser)
+                        {
+                            isAdmin = "Yes";
+                        }
+
+                        string createdDateText = (user.DateCreated == DateTime.MinValue) ? "" : user.DateCreated.ToString();
+
+                        table.AddRow(
+                            $"{style}{user.Name}[/]",
+                            $"{style}{user.Username}[/]",
+                            $"{style}{isAdmin}[/]",
+                            $"{style}{createdDateText}[/]"
+                        );
+                        
+                    }
+
+                    AnsiConsole.Render(table);
+
+                    AnsiConsole.MarkupLine("Please use up and down arrow keys to select data row");
+                    AnsiConsole.MarkupLine("Press [bold green]'a'[/] to [bold green] make user an admin[/]");
+                    AnsiConsole.MarkupLine("Press [bold green]'d'[/] to [bold green]delete[/]");
+                    AnsiConsole.MarkupLine("Press [bold green]'b'[/] to [bold green]back[/]");
+                    
+                    
+                    var key = Console.ReadKey().Key;
+
+                    var selectedUser = users[selectedRowIndex];
+                    switch (key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            selectedRowIndex = Math.Max(0, selectedRowIndex - 1);
+                            break;
+                        case ConsoleKey.DownArrow:
+                            selectedRowIndex = Math.Min(users.Count - 1, selectedRowIndex + 1);
+                            break;
+                        case ConsoleKey.A:
+                            await MakeUserAdmin(selectedUser);
+                            break;
+                        case ConsoleKey.D:
+                            await DeleteUser(selectedUser);
+                            break;
+                        case ConsoleKey.B:
+                            await AdminMenu();
+                            break;
+                        default:
+                            break;
+                    }
+
+                    Console.Clear(); 
+                }
+            }
+        }
+
+        private async Task DeleteUser(User selectedUser)
+        {
+            NewView();
+
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title($"Are you sure you want to delete user ({selectedUser.Name}) ?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Yes",
+                        "No"
+                    }));
+
+            switch (selection)
+            {
+                case "Yes":
+                    if (_loginSession.User is Admin admin)
+                    {
+                        await admin.DeleteUser(selectedUser.UserId);
+                    }
+                    await ViewUsers();
+                    break;
+                case "No":
+                    await ViewUsers();
+                    break;
+            }
+        }
+
+        private async Task MakeUserAdmin(User selectedUser)
+        {
+            NewView();
+
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title($"Are you sure you want to make user ({selectedUser.Name}) as Admin?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Yes",
+                        "No"
+                    }));
+
+            switch (selection)
+            {
+                case "Yes":
+                    if (_loginSession.User is Admin admin)
+                    {
+                        await admin.MakeUserAdmin(selectedUser.UserId);
+                    }
+                    await ViewUsers();
+                    break;
+                case "No":
+                    await ViewUsers();
+                    break;
+            }
+        }
+
+        private async Task ViewAllCredentials()
+        {
+            Console.Clear();
+            if (_loginSession.User is Admin admin)
+            {
+                var credentialsList = await admin.ViewAllCredentials();
+                
+                if (!credentialsList.Any())
+                {
+                    AnsiConsole.MarkupLine("[green]Can't find any credentials[/] Press any key to go back");
+                    Console.ReadKey();
+                    await AdminMenu();
+                }
+                
+                // Display the table
+                var table = new Table();
+                table.AddColumn("User's Name");
+                table.AddColumn("User's Username");
+                table.AddColumn("Username");
+                table.AddColumn("Password");
+                table.AddColumn("Type");
+                table.AddColumn("Additional Info");
+                table.AddColumn("Created Date");
+                table.AddColumn("Updated Date");
+
+                for (var i = 0; i < credentialsList.Count; i++)
+                {
+                    var credential = credentialsList[i];
+                    var style = "[]";
+
+                    string additionalInfo;
+                    string type;
+                    switch (credential)
+                    {
+                        case CredentialGame game:
+                            additionalInfo = $"Game: {game.GameName}, Developer: {game.Developer}";
+                            type = "Game";
+                            break;
+                        case CredentialWebsite website:
+                            additionalInfo = $"Website: {website.WebsiteName}, URL: {website.Url}";
+                            type = "Website";
+                            break;
+                        case CredentialDesktopApp desktopApp:
+                            additionalInfo = $"App Name: {desktopApp.DesktopAppName}";
+                            type = "Desktop App";
+                            break;
+                        default:
+                            additionalInfo = "";
+                            type = "";
+                            break;
+                    }
+
+                    string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
+                    string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
+
+                    table.AddRow(
+                        $"{style}{credential.User.Name}[/]",
+                        $"{style}{credential.User.Username}[/]",
+                        $"{style}{credential.Username}[/]",
+                        $"{style}{credential.Password}[/]",
+                        $"{style}{type}[/]",
+                        $"{style}{additionalInfo}[/]",
+                        $"{style}{createdDateText}[/]",
+                        $"{style}{updatedDateText}[/]"
+                    );
+                }
+
+                AnsiConsole.Render(table);
+                AnsiConsole.MarkupLine("Press any key to go back");
+                Console.ReadKey();
+                await AdminMenu();
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]You don't have access to this view[/] Press any key to go back");
+                Console.ReadKey();
+                await AdminMenu();
             }
         }
 
@@ -377,35 +634,31 @@ namespace PassShieldPasswordManager
                 case "Game":
                     var gameCredential = new CredentialGame
                     {
-                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         GameName = AnsiConsole.Ask<string>("Enter [green]Game Name[/] :"),
                         Developer = AnsiConsole.Ask<string>("Enter [green]Game developer[/] :")
                     };
-                    await gameCredential.Create();
+                    await _loginSession.User.CreateCredential(gameCredential);
                     break;
                 case "Website":
                     var websiteCredential = new CredentialWebsite
                     {
-                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         WebsiteName = AnsiConsole.Ask<string>("Enter [green]Website name[/] :"),
                         Url = AnsiConsole.Ask<string>("Enter [green]Website Url[/] :")
                     };
-                    await websiteCredential.Create();
-                    
+                    await _loginSession.User.CreateCredential(websiteCredential);
                     break;
                 case "Desktop Application":
                     var desktopAppCredential = new CredentialDesktopApp
                     {
-                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         DesktopAppName = AnsiConsole.Ask<string>("Enter [green]Desktop application name[/] :")
                     };
-                    await desktopAppCredential.Create();
+                    await _loginSession.User.CreateCredential(desktopAppCredential);
                     break;
             }
             
@@ -414,11 +667,17 @@ namespace PassShieldPasswordManager
             await MainMenu();
         }
 
-        private async Task ViewCredentials()
+        private async Task ViewCredentials(SortBy sortBy = SortBy.None, SortOrder sortOrder = SortOrder.None, string search = null)
         {
             Console.Clear();
-            var credentialsList = await _credential.GetList(_loginSession.User.UserId); 
-
+            var credentialsList = await _loginSession.User.ViewCredentials(sortBy, sortOrder, search);
+            if (!credentialsList.Any())
+            {
+                AnsiConsole.MarkupLine("[green]Can't find any credentials[/] Press any key to go back");
+                Console.ReadKey();
+                await MainMenu();
+            }
+            
             var selectedRowIndex = 0;
 
             while (true)
@@ -449,8 +708,8 @@ namespace PassShieldPasswordManager
                             additionalInfo = $"Website: {website.WebsiteName}, URL: {website.Url}";
                             type = "Website";
                             break;
-                        case CredentialDesktopApp website:
-                            additionalInfo = $"App Name: {website.DesktopAppName}";
+                        case CredentialDesktopApp desktopApp:
+                            additionalInfo = $"App Name: {desktopApp.DesktopAppName}";
                             type = "Desktop App";
                             break;
                         default:
@@ -459,14 +718,18 @@ namespace PassShieldPasswordManager
                             break;
                     }
 
+                    string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
+                    string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
+
                     table.AddRow(
                         $"{style}{credential.Username}[/]",
                         $"{style}{credential.Password}[/]",
                         $"{style}{type}[/]",
                         $"{style}{additionalInfo}[/]",
-                        $"{style}{credential.CreatedDate}[/]",
-                        $"{style}{credential.UpdatedDate}[/]"
+                        $"{style}{createdDateText}[/]",
+                        $"{style}{updatedDateText}[/]"
                     );
+                    
                 }
 
                 AnsiConsole.Render(table);
@@ -474,11 +737,17 @@ namespace PassShieldPasswordManager
                 AnsiConsole.MarkupLine("Please use up and down arrow keys to select data row");
                 AnsiConsole.MarkupLine("Press [bold green]'e'[/] to [bold green]edit[/]");
                 AnsiConsole.MarkupLine("Press [bold green]'d'[/] to [bold green]delete[/]");
-                AnsiConsole.MarkupLine("Press [bold green]'s'[/] to [bold green]sort[/]");
+                AnsiConsole.MarkupLine("Press [bold green]'v'[/] to [bold green]view password[/]");
+                if (string.IsNullOrEmpty(search))
+                {
+                    AnsiConsole.MarkupLine("Press [bold green]'s'[/] to [bold green]sort[/]");
+                }
                 AnsiConsole.MarkupLine("Press [bold green]'b'[/] to [bold green]back[/]");
                 
                 
                 var key = Console.ReadKey().Key;
+
+                var selectedCredential = credentialsList[selectedRowIndex];
                 switch (key)
                 {
                     case ConsoleKey.UpArrow:
@@ -488,13 +757,16 @@ namespace PassShieldPasswordManager
                         selectedRowIndex = Math.Min(credentialsList.Count - 1, selectedRowIndex + 1);
                         break;
                     case ConsoleKey.E:
-                        // Implement your edit logic here using credentialsList[selectedRowIndex]
+                        await UpdateCredential(selectedCredential);
                         break;
                     case ConsoleKey.D:
-                        // Implement your delete logic here using credentialsList[selectedRowIndex]
+                        await DeleteCredential(selectedCredential);
                         break;
                     case ConsoleKey.S:
-                        // Implement your delete logic here using credentialsList[selectedRowIndex]
+                        await SortCredential();
+                        break;
+                    case ConsoleKey.V:
+                        await ViewPassword(selectedCredential);
                         break;
                     case ConsoleKey.B:
                         await MainMenu();
@@ -503,18 +775,131 @@ namespace PassShieldPasswordManager
                         break;
                 }
 
-                Console.Clear(); // Clear console for the next iteration
+                Console.Clear(); 
             }
         }
-        
-        private static List<Credentials> GetDummyCredentialsList()
+
+        private async Task ViewPassword(Credential credential)
         {
-            return new List<Credentials>
+            NewView();
+            AnsiConsole.MarkupLine($" Your {credential.Username} Password is [green] {credential.Password} [/] Press any key to go back");
+            Console.ReadKey();
+            await ViewCredentials();
+        }
+
+        private async Task SortCredential()
+        {
+            NewView();
+            var sortBy = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("What column you need to sort?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "UpdatedDate",
+                        "CreatedDate",
+                        "Username"
+                    }));
+            
+            var sortOrder  = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("What Sorting order?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Ascending",
+                        "Descending"
+                    }));
+            
+            SortBy sortByEnum = (SortBy)Enum.Parse(typeof(SortBy), sortBy);
+            SortOrder sortOrderEnum = (SortOrder)Enum.Parse(typeof(SortOrder), sortOrder);
+            await ViewCredentials(sortByEnum, sortOrderEnum);
+        }
+
+        private async Task UpdateCredential(Credential selectedCredential)
+        {
+            NewView();
+            AnsiConsole.WriteLine($"Type the field you want to update, if you doesn't need to update a field just press ENTER.");
+            var username = AnsiConsole.Ask<string>($"Enter [green]Username[/] :", defaultValue: selectedCredential.Username);
+            var password = AnsiConsole.Prompt(
+                new TextPrompt<string>($"Enter [green]New Password[/] :")
+                    .PromptStyle("red")
+                    .Secret()
+                    .DefaultValue(selectedCredential.Password)
+            );
+            
+            switch (selectedCredential)
             {
-                new Credentials { CredentialId = 1, Username = "user1", Password = "pass1", Type = 1, Name = "John", UrlOrDeveloper = "http://example.com", CreatedDate = DateTime.Now, UpdatedDate = DateTime.Now },
-                new Credentials { CredentialId = 2, Username = "user2", Password = "pass2", Type = 2, Name = "Jane", UrlOrDeveloper = "http://example.org", CreatedDate = DateTime.Now, UpdatedDate = DateTime.Now },
-                // Add more data as needed
-            };
+                case CredentialGame game:
+                    var gameCredential = new CredentialGame
+                    {
+                        CredentialId = selectedCredential.CredentialId,
+                        Username = username,
+                        Password = password,
+                        GameName = AnsiConsole.Ask<string>($"Enter [green]Game Name[/] :", defaultValue: game.GameName),
+                        Developer = AnsiConsole.Ask<string>($"Enter [green]Game developer[/] :", defaultValue: game.Developer)
+                    };
+                    await _loginSession.User.UpdateCredential(gameCredential);
+                    break;
+                case CredentialWebsite website:
+                    var websiteCredential = new CredentialWebsite
+                    {
+                        CredentialId = selectedCredential.CredentialId,
+                        Username = username,
+                        Password = password,
+                        WebsiteName = AnsiConsole.Ask<string>($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName),
+                        Url = AnsiConsole.Ask<string>($"Enter [green]Website Url[/] :", defaultValue: website.Url)
+                    };
+                    await _loginSession.User.UpdateCredential(websiteCredential);
+                    break;
+                case CredentialDesktopApp desktopApp:
+                    var desktopAppCredential = new CredentialDesktopApp
+                    {
+                        CredentialId = selectedCredential.CredentialId,
+                        User = _loginSession.User,
+                        Username = username,
+                        Password = password,
+                        DesktopAppName = AnsiConsole.Ask<string>($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName)
+                    };
+                    await _loginSession.User.UpdateCredential(desktopAppCredential);
+                    break;
+                default:
+                    break;
+            }
+            
+            AnsiConsole.MarkupLine("[green]Credential updated successfully[/] Press any key to go back");
+            Console.ReadKey();
+            await ViewCredentials();
+        }
+
+        private async Task DeleteCredential(Credential selectedCredential)
+        {
+            NewView();
+
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Are you sure you want to delete?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Yes",
+                        "No"
+                    }));
+
+            switch (selection)
+            {
+                case "Yes":
+                    await _loginSession.User.DeleteCredential(selectedCredential.CredentialId);
+                    await ViewCredentials();
+                    break;
+                case "No":
+                    await ViewCredentials();
+                    break;
+            }
+        }
+
+        private async Task SearchCredential()
+        {
+            NewView();
+            var username = AnsiConsole.Ask<string>("Enter [green]Username[/] to search :");
+            await ViewCredentials(SortBy.None, SortOrder.None, username);
         }
         
         private void NewView()

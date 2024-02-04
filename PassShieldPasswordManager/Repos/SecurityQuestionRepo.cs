@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
+using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 

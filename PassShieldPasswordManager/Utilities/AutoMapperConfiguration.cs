@@ -1,8 +1,7 @@
 using AutoMapper;
-using Microsoft.Data.Sqlite;
 using PassShieldPasswordManager.Models;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Utilities;
 
 public class AutoMapperConfiguration
 {
@@ -13,6 +12,7 @@ public class AutoMapperConfiguration
     {
         var config = new MapperConfiguration(cfg => {
             cfg.CreateMap<Users, User>().ReverseMap();
+            cfg.CreateMap<Users, Admin>().ReverseMap();
             cfg.CreateMap<SecurityQuestions, SecurityQuestion>().ReverseMap();
             cfg.CreateMap<Credentials, CredentialWebsite>().ReverseMap();
             cfg.CreateMap<Credentials, CredentialGame>().ReverseMap();

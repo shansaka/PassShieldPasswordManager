@@ -1,6 +1,6 @@
 using PassShieldPasswordManager.Models;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Utilities;
 
 public class DbConnection
 {

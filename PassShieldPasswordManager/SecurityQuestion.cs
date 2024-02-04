@@ -1,6 +1,7 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager;
 

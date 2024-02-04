@@ -1,8 +1,7 @@
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Utilities;
 
 public class Encryption
 {

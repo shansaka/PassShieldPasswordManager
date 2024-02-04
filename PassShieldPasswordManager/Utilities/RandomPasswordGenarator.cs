@@ -1,4 +1,4 @@
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Utilities;
 
 public class RandomPasswordGenerator
 {

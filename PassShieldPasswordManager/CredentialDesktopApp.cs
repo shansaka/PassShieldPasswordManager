@@ -1,6 +1,7 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager;
 
@@ -17,13 +18,35 @@ public class CredentialDesktopApp : Credential
         {
             var credentials = new Credentials
             {
+                UserId = User.UserId,
+                Username = Username,
+                Password = Password,
+                Name = DesktopAppName,
+                Type = (int)CredentialType.DesktopApp
+            };
+            await _credentialRepo.CreateCredential(credentials);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+    
+    public async Task Update()
+    {
+        try
+        {
+            var credentials = new Credentials
+            {
+                CredentialId = CredentialId,
                 Username = Username,
                 Password = Password,
                 Name = DesktopAppName,
                 UserId = User.UserId,
                 Type = (int)CredentialType.DesktopApp
             };
-            await _credentialRepo.CreateCredential(credentials);
+            await _credentialRepo.UpdateCredential(credentials);
         }
         catch (Exception e)
         {

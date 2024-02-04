@@ -1,6 +1,8 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Utilities;
+
 namespace PassShieldPasswordManager;
 
 public class Account
@@ -45,7 +47,13 @@ public class Account
     {
         try
         {
-            return _mapper.Map<User>(await _userRepo.GetByUsername(username));
+            var user = await _userRepo.GetByUsername(username);
+            if (user != null)
+            {
+                return user.IsAdmin ? _mapper.Map<Admin>(user) : _mapper.Map<User>(user);
+            }
+
+            return null;
         }
         catch (Exception e)
         {

@@ -1,6 +1,4 @@
-using PassShieldPasswordManager.Repos;
-
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Utilities;
 public class LoginSession
 {
     private static LoginSession _instance;
@@ -17,7 +15,15 @@ public class LoginSession
         if (File.Exists("loggedinuser.txt"))
         {
             var username = await File.ReadAllTextAsync("loggedinuser.txt");
-            _user = await _account.VerifyUsername(username);
+            var user = await _account.VerifyUsername(username);
+            if (user is Admin admin)
+            {
+                _user = admin;
+            }
+            else
+            {
+                _user = user;
+            }
         }
     }
 

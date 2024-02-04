@@ -1,6 +1,7 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager;
 
@@ -26,6 +27,28 @@ public class CredentialGame : Credential
                 Type = (int)CredentialType.Game
             };
             await _credentialRepo.CreateCredential(credentials);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task Update()
+    {
+        try
+        {
+            var credentials = new Credentials
+            {
+                CredentialId = CredentialId,
+                Username = Username,
+                Password = Password,
+                Name = GameName,
+                UrlOrDeveloper = Developer,
+                Type = (int)CredentialType.Game
+            };
+            await _credentialRepo.UpdateCredential(credentials);
         }
         catch (Exception e)
         {

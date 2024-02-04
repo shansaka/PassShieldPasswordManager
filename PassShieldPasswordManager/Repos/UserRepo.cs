@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
+using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 
@@ -79,6 +80,55 @@ public class UserRepo
             if (result != null)
             {
                 result.Password = new Encryption(newPassword).CreateSha512();
+                await _dbConnection.Db.SaveChangesAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<List<Users>> GetUsers()
+    {
+        try
+        {
+            return await _dbConnection.Db.Users.Where(x => x.IsDeleted == false).ToListAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task MakeUserAdmin(int userId)
+    {
+        try
+        {
+            var user = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (user != null)
+            {
+                user.IsAdmin = true;
+                await _dbConnection.Db.SaveChangesAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task DeleteUser(int userId)
+    {
+        try
+        {
+            var user = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (user != null)
+            {
+                user.IsDeleted = true;
                 await _dbConnection.Db.SaveChangesAsync();
             }
         }
