@@ -19,12 +19,12 @@ public class Credential
     private readonly CredentialRepo _credentialRepo = new();
     private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
     
-    public async Task<List<Credential>> GetList(User user, string username = null)
+    public async Task<List<Credential>> GetList(User user, string name = null)
     {
         try
         {
             
-            var result = await _credentialRepo.GetCredentialList(user.UserId, username);
+            var result = await _credentialRepo.GetCredentialList(user.UserId, name);
             return MapCredentialTypes(result);
         }
         catch (Exception e)

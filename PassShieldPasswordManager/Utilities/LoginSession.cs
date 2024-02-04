@@ -15,7 +15,7 @@ public class LoginSession
         if (File.Exists("loggedinuser.txt"))
         {
             var username = await File.ReadAllTextAsync("loggedinuser.txt");
-            var user = await _account.VerifyUsername(username);
+            var user = await _account.VerifyUsername(new Encryption(username).Decrypt());
             if (user is Admin admin)
             {
                 _user = admin;
@@ -51,7 +51,7 @@ public class LoginSession
 
     public void Login(User user)
     {
-        File.WriteAllText("loggedinuser.txt", user.Username);
+        File.WriteAllText("loggedinuser.txt", new Encryption(user.Username).Encrypt());
         if (user is Admin admin)
         {
             _user = admin;

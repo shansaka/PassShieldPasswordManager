@@ -11,7 +11,8 @@ public class CredentialDesktopApp : Credential
     
     private readonly CredentialRepo _credentialRepo = new();
     private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
-    
+
+
     public async Task Create()
     {
         try
@@ -20,7 +21,7 @@ public class CredentialDesktopApp : Credential
             {
                 UserId = User.UserId,
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = DesktopAppName,
                 Type = (int)CredentialType.DesktopApp
             };
@@ -41,7 +42,7 @@ public class CredentialDesktopApp : Credential
             {
                 CredentialId = CredentialId,
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = DesktopAppName,
                 UserId = User.UserId,
                 Type = (int)CredentialType.DesktopApp

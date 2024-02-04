@@ -33,8 +33,7 @@ public class UserRepo
         {
             user.Password = new Encryption(user.Password).CreateSha512();
             await _dbConnection.Db.Users.AddAsync(user);
-            var id = await _dbConnection.Db.SaveChangesAsync();
-            user.UserId = id;
+            await _dbConnection.Db.SaveChangesAsync();
             return user;
         }
         catch (Exception e)

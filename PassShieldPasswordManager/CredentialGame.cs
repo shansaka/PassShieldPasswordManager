@@ -20,7 +20,7 @@ public class CredentialGame : Credential
             var credentials = new Credentials
             {
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = GameName,
                 UrlOrDeveloper = Developer,
                 UserId = User.UserId,
@@ -43,7 +43,7 @@ public class CredentialGame : Credential
             {
                 CredentialId = CredentialId,
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = GameName,
                 UrlOrDeveloper = Developer,
                 Type = (int)CredentialType.Game

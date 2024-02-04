@@ -24,12 +24,14 @@ public class RandomPasswordGenerator
 
         if (IncludeSpecialChars)
             validChars += SpecialChars;
-
+        
         var random = new Random();
-        var password = new string(Enumerable.Repeat(validChars, Length)
-            .Select(s => s[random.Next(s.Length)])
-            .ToArray());
+        var chars = new char[Length];
+        for (var i = 0; i < Length; i++)
+        {
+            chars[i] = validChars[random.Next(0, validChars.Length)];
+        }
 
-        return password;
+        return new string(chars);
     }
 }

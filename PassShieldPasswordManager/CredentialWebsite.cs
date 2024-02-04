@@ -20,7 +20,7 @@ public class CredentialWebsite : Credential
             var credentials = new Credentials
             {
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = WebsiteName,
                 UrlOrDeveloper = Url,
                 UserId = User.UserId,
@@ -43,7 +43,7 @@ public class CredentialWebsite : Credential
             {
                 CredentialId = CredentialId,
                 Username = Username,
-                Password = Password,
+                Password = new Encryption(Password).Encrypt(),
                 Name = WebsiteName,
                 UrlOrDeveloper = Url,
                 Type = (int)CredentialType.Website

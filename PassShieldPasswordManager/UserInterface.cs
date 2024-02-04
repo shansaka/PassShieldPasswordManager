@@ -15,7 +15,40 @@ namespace PassShieldPasswordManager
             {
                 if (_loginSession.IsLoggedIn())
                 {
-                    await MainMenu();
+                    NewView();
+                    
+                    var passwordMatched = false;
+                    var count = 0;
+                    while (!passwordMatched)
+                    {
+                        var password = AnsiConsole.Prompt(
+                            new TextPrompt<string>("Enter [green]Password[/] :")
+                                .PromptStyle("red")
+                                .Secret()
+                        );
+
+                        if (new Encryption(password).CreateSha512() == _loginSession.User.Password)
+                        {
+                            passwordMatched = true;
+                            await MainMenu();
+                        }
+                        else
+                        {
+                            AnsiConsole.WriteLine();
+                            AnsiConsole.Markup("[red]Password is incorrect[/], please try again.");
+                            AnsiConsole.WriteLine();
+                        }
+
+                        count++;
+                        if (count == 3)
+                        {
+                            AnsiConsole.MarkupLine("[red]You have entered wrong usernames more than 3 times[/] We're logging you off, try log in again.");
+                            Console.ReadKey();
+                            _loginSession.Logout();
+                            await ApplicationMenu();
+                            return;
+                        }
+                    }
                 }
                 else
                 {
@@ -429,10 +462,10 @@ namespace PassShieldPasswordManager
                         string createdDateText = (user.DateCreated == DateTime.MinValue) ? "" : user.DateCreated.ToString();
 
                         table.AddRow(
-                            $"{style}{user.Name}[/]",
-                            $"{style}{user.Username}[/]",
-                            $"{style}{isAdmin}[/]",
-                            $"{style}{createdDateText}[/]"
+                            $"{style}{user.Name.EscapeMarkup()}[/]",
+                            $"{style}{user.Username.EscapeMarkup()}[/]",
+                            $"{style}{isAdmin.EscapeMarkup()}[/]",
+                            $"{style}{createdDateText.EscapeMarkup()}[/]"
                         );
                         
                     }
@@ -480,7 +513,7 @@ namespace PassShieldPasswordManager
 
             var selection = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title($"Are you sure you want to delete user ({selectedUser.Name}) ?")
+                    .Title($"Are you sure you want to delete user ({selectedUser.Name.EscapeMarkup()}) ?")
                     .PageSize(10)
                     .AddChoices(new[] {
                         "Yes",
@@ -508,7 +541,7 @@ namespace PassShieldPasswordManager
 
             var selection = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
-                    .Title($"Are you sure you want to make user ({selectedUser.Name}) as Admin?")
+                    .Title($"Are you sure you want to make user ({selectedUser.Name.EscapeMarkup()}) as Admin?")
                     .PageSize(10)
                     .AddChoices(new[] {
                         "Yes",
@@ -530,94 +563,53 @@ namespace PassShieldPasswordManager
             }
         }
 
-        private async Task ViewAllCredentials()
-        {
-            Console.Clear();
-            if (_loginSession.User is Admin admin)
-            {
-                var credentialsList = await admin.ViewAllCredentials();
-                
-                if (!credentialsList.Any())
-                {
-                    AnsiConsole.MarkupLine("[green]Can't find any credentials[/] Press any key to go back");
-                    Console.ReadKey();
-                    await AdminMenu();
-                }
-                
-                // Display the table
-                var table = new Table();
-                table.AddColumn("User's Name");
-                table.AddColumn("User's Username");
-                table.AddColumn("Username");
-                table.AddColumn("Password");
-                table.AddColumn("Type");
-                table.AddColumn("Additional Info");
-                table.AddColumn("Created Date");
-                table.AddColumn("Updated Date");
-
-                for (var i = 0; i < credentialsList.Count; i++)
-                {
-                    var credential = credentialsList[i];
-                    var style = "[]";
-
-                    string additionalInfo;
-                    string type;
-                    switch (credential)
-                    {
-                        case CredentialGame game:
-                            additionalInfo = $"Game: {game.GameName}, Developer: {game.Developer}";
-                            type = "Game";
-                            break;
-                        case CredentialWebsite website:
-                            additionalInfo = $"Website: {website.WebsiteName}, URL: {website.Url}";
-                            type = "Website";
-                            break;
-                        case CredentialDesktopApp desktopApp:
-                            additionalInfo = $"App Name: {desktopApp.DesktopAppName}";
-                            type = "Desktop App";
-                            break;
-                        default:
-                            additionalInfo = "";
-                            type = "";
-                            break;
-                    }
-
-                    string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
-                    string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
-
-                    table.AddRow(
-                        $"{style}{credential.User.Name}[/]",
-                        $"{style}{credential.User.Username}[/]",
-                        $"{style}{credential.Username}[/]",
-                        $"{style}{credential.Password}[/]",
-                        $"{style}{type}[/]",
-                        $"{style}{additionalInfo}[/]",
-                        $"{style}{createdDateText}[/]",
-                        $"{style}{updatedDateText}[/]"
-                    );
-                }
-
-                AnsiConsole.Render(table);
-                AnsiConsole.MarkupLine("Press any key to go back");
-                Console.ReadKey();
-                await AdminMenu();
-            }
-            else
-            {
-                AnsiConsole.MarkupLine("[red]You don't have access to this view[/] Press any key to go back");
-                Console.ReadKey();
-                await AdminMenu();
-            }
-        }
-
         private async Task CreateNewCredential()
         {
             var username = AnsiConsole.Ask<string>("Enter [green]Username[/] :");
-            var password = AnsiConsole.Prompt(
-                new TextPrompt<string>("Enter [green]New Password[/] :")
-                    .PromptStyle("red")
-                    .Secret()
-            );
+            
+            var generateRandomPassword = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Do you want a random password generated?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "Yes",
+                        "No"
+                    }));
+
+            var password = "";
+            if (generateRandomPassword == "Yes")
+            {
+                var isPasswordSatisfied = false;
+                while (!isPasswordSatisfied)
+                {
+                    password = GenerateRandomPassword();
+                    AnsiConsole.MarkupLine($"Your random password is [green]{password.EscapeMarkup()}[/]");
+                    
+                    var regenerateSelection = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("Do you want to generate again?")
+                            .PageSize(10)
+                            .AddChoices(new[] {
+                                "No",
+                                "Yes"
+                            }));
+                    
+                    if (regenerateSelection == "No")
+                    {
+                        isPasswordSatisfied = true;
+                    }
+                }
+            }
+            else
+            {
+                password = AnsiConsole.Prompt(
+                    new TextPrompt<string>("Enter [green]New Password[/] :")
+                        .PromptStyle("red")
+                        .Secret()
+                );
+            }
+            
+            
             
             var selection = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
@@ -722,12 +714,12 @@ namespace PassShieldPasswordManager
                     string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
 
                     table.AddRow(
-                        $"{style}{credential.Username}[/]",
-                        $"{style}{credential.Password}[/]",
-                        $"{style}{type}[/]",
-                        $"{style}{additionalInfo}[/]",
-                        $"{style}{createdDateText}[/]",
-                        $"{style}{updatedDateText}[/]"
+                        $"{style}{credential.Username.EscapeMarkup()}[/]",
+                        $"{style}{credential.Password.EscapeMarkup()}[/]",
+                        $"{style}{type.EscapeMarkup()}[/]",
+                        $"{style}{additionalInfo.EscapeMarkup()}[/]",
+                        $"{style}{createdDateText.EscapeMarkup()}[/]",
+                        $"{style}{updatedDateText.EscapeMarkup()}[/]"
                     );
                     
                 }
@@ -758,15 +750,18 @@ namespace PassShieldPasswordManager
                         break;
                     case ConsoleKey.E:
                         await UpdateCredential(selectedCredential);
+                        await ViewCredentials();
                         break;
                     case ConsoleKey.D:
                         await DeleteCredential(selectedCredential);
+                        await ViewCredentials();
                         break;
                     case ConsoleKey.S:
                         await SortCredential();
                         break;
                     case ConsoleKey.V:
                         await ViewPassword(selectedCredential);
+                        await ViewCredentials();
                         break;
                     case ConsoleKey.B:
                         await MainMenu();
@@ -778,13 +773,128 @@ namespace PassShieldPasswordManager
                 Console.Clear(); 
             }
         }
+        
+        private async Task ViewAllCredentials()
+        {
+            Console.Clear();
+            if (_loginSession.User is Admin admin)
+            {
+                var credentialsList = await admin.ViewAllCredentials();
+                if (!credentialsList.Any())
+                {
+                    AnsiConsole.MarkupLine("[green]Can't find any credentials[/] Press any key to go back");
+                    Console.ReadKey();
+                    await MainMenu();
+                }
+                
+                var selectedRowIndex = 0;
+
+                while (true)
+                {
+                    // Display the table
+                    var table = new Table();
+                    table.AddColumn("User's Name");
+                    table.AddColumn("User's Username");
+                    table.AddColumn("Username");
+                    table.AddColumn("Password");
+                    table.AddColumn("Type");
+                    table.AddColumn("Additional Info");
+                    table.AddColumn("Created Date");
+                    table.AddColumn("Updated Date");
+
+                    for (var i = 0; i < credentialsList.Count; i++)
+                    {
+                        var credential = credentialsList[i];
+                        var style = i == selectedRowIndex ? "[bold red]" : "[]";
+
+                        string additionalInfo;
+                        string type;
+                        switch (credential)
+                        {
+                            case CredentialGame game:
+                                additionalInfo = $"Game: {game.GameName}, Developer: {game.Developer}";
+                                type = "Game";
+                                break;
+                            case CredentialWebsite website:
+                                additionalInfo = $"Website: {website.WebsiteName}, URL: {website.Url}";
+                                type = "Website";
+                                break;
+                            case CredentialDesktopApp desktopApp:
+                                additionalInfo = $"App Name: {desktopApp.DesktopAppName}";
+                                type = "Desktop App";
+                                break;
+                            default:
+                                additionalInfo = "";
+                                type = "";
+                                break;
+                        }
+
+                        string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
+                        string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
+
+                        table.AddRow(
+                            $"{style}{credential.User.Name.EscapeMarkup()}[/]",
+                            $"{style}{credential.User.Username.EscapeMarkup()}[/]",
+                            $"{style}{credential.Username.EscapeMarkup()}[/]",
+                            $"{style}{credential.Password.EscapeMarkup()}[/]",
+                            $"{style}{type.EscapeMarkup()}[/]",
+                            $"{style}{additionalInfo.EscapeMarkup()}[/]",
+                            $"{style}{createdDateText.EscapeMarkup()}[/]",
+                            $"{style}{updatedDateText.EscapeMarkup()}[/]"
+                        );
+                        
+                    }
+
+                    AnsiConsole.Render(table);
+
+                    AnsiConsole.MarkupLine("Please use up and down arrow keys to select data row");
+                    AnsiConsole.MarkupLine("Press [bold green]'e'[/] to [bold green]edit[/]");
+                    AnsiConsole.MarkupLine("Press [bold green]'d'[/] to [bold green]delete[/]");
+                    AnsiConsole.MarkupLine("Press [bold green]'v'[/] to [bold green]view password[/]");
+                    AnsiConsole.MarkupLine("Press [bold green]'b'[/] to [bold green]back[/]");
+                    
+                    
+                    var key = Console.ReadKey().Key;
+
+                    var selectedCredential = credentialsList[selectedRowIndex];
+                    switch (key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            selectedRowIndex = Math.Max(0, selectedRowIndex - 1);
+                            break;
+                        case ConsoleKey.DownArrow:
+                            selectedRowIndex = Math.Min(credentialsList.Count - 1, selectedRowIndex + 1);
+                            break;
+                        case ConsoleKey.E:
+                            await UpdateCredential(selectedCredential);
+                            await ViewAllCredentials();
+                            break;
+                        case ConsoleKey.D:
+                            await DeleteCredential(selectedCredential);
+                            await ViewAllCredentials();
+                            break;
+                        case ConsoleKey.V:
+                            await ViewPassword(selectedCredential);
+                            await ViewAllCredentials();
+                            break;
+                        case ConsoleKey.B:
+                            await AdminMenu();
+                            break;
+                        default:
+                            break;
+                    }
+
+                    Console.Clear(); 
+                }
+            }
+            
+        }
 
         private async Task ViewPassword(Credential credential)
         {
             NewView();
-            AnsiConsole.MarkupLine($" Your {credential.Username} Password is [green] {credential.Password} [/] Press any key to go back");
+            AnsiConsole.MarkupLine($"Your {credential.Username.EscapeMarkup()} Password is [yellow]{new Encryption(credential.Password).Decrypt().EscapeMarkup()}[/] Press any key to go back");
             Console.ReadKey();
-            await ViewCredentials();
         }
 
         private async Task SortCredential()
@@ -818,13 +928,51 @@ namespace PassShieldPasswordManager
         {
             NewView();
             AnsiConsole.WriteLine($"Type the field you want to update, if you doesn't need to update a field just press ENTER.");
-            var username = AnsiConsole.Ask<string>($"Enter [green]Username[/] :", defaultValue: selectedCredential.Username);
-            var password = AnsiConsole.Prompt(
-                new TextPrompt<string>($"Enter [green]New Password[/] :")
-                    .PromptStyle("red")
-                    .Secret()
-                    .DefaultValue(selectedCredential.Password)
-            );
+            var username = AnsiConsole.Ask<string>($"Enter [green]Username[/] :", defaultValue: selectedCredential.Username.EscapeMarkup());
+            var generateRandomPassword = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Do you want a random password generated?")
+                    .PageSize(10)
+                    .AddChoices(new[] {
+                        "No",
+                        "Yes"
+                    }));
+
+            var password = "";
+            if (generateRandomPassword == "Yes")
+            {
+                var isPasswordSatisfied = false;
+                while (!isPasswordSatisfied)
+                {
+                    password = GenerateRandomPassword();
+                    AnsiConsole.MarkupLine($"Your random password is [green]{password.EscapeMarkup()}[/]");
+                    
+                    var regenerateSelection = AnsiConsole.Prompt(
+                        new SelectionPrompt<string>()
+                            .Title("Do you want to generate again?")
+                            .PageSize(10)
+                            .AddChoices(new[] {
+                                "No",
+                                "Yes"
+                            }));
+                    
+                    if (regenerateSelection == "No")
+                    {
+                        isPasswordSatisfied = true;
+                    }
+                }
+            }
+            else
+            {
+                password = AnsiConsole.Prompt(
+                    new TextPrompt<string>($"Enter [green]New Password[/] :")
+                        .PromptStyle("red")
+                        .Secret()
+                        .DefaultValue(selectedCredential.Password.EscapeMarkup())
+                );
+            }
+            
+            
             
             switch (selectedCredential)
             {
@@ -834,8 +982,8 @@ namespace PassShieldPasswordManager
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
                         Password = password,
-                        GameName = AnsiConsole.Ask<string>($"Enter [green]Game Name[/] :", defaultValue: game.GameName),
-                        Developer = AnsiConsole.Ask<string>($"Enter [green]Game developer[/] :", defaultValue: game.Developer)
+                        GameName = AnsiConsole.Ask<string>($"Enter [green]Game Name[/] :", defaultValue: game.GameName.EscapeMarkup()),
+                        Developer = AnsiConsole.Ask<string>($"Enter [green]Game developer[/] :", defaultValue: game.Developer.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(gameCredential);
                     break;
@@ -845,8 +993,8 @@ namespace PassShieldPasswordManager
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
                         Password = password,
-                        WebsiteName = AnsiConsole.Ask<string>($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName),
-                        Url = AnsiConsole.Ask<string>($"Enter [green]Website Url[/] :", defaultValue: website.Url)
+                        WebsiteName = AnsiConsole.Ask<string>($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName.EscapeMarkup()),
+                        Url = AnsiConsole.Ask<string>($"Enter [green]Website Url[/] :", defaultValue: website.Url.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(websiteCredential);
                     break;
@@ -857,7 +1005,7 @@ namespace PassShieldPasswordManager
                         User = _loginSession.User,
                         Username = username,
                         Password = password,
-                        DesktopAppName = AnsiConsole.Ask<string>($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName)
+                        DesktopAppName = AnsiConsole.Ask<string>($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(desktopAppCredential);
                     break;
@@ -867,7 +1015,7 @@ namespace PassShieldPasswordManager
             
             AnsiConsole.MarkupLine("[green]Credential updated successfully[/] Press any key to go back");
             Console.ReadKey();
-            await ViewCredentials();
+            
         }
 
         private async Task DeleteCredential(Credential selectedCredential)
@@ -887,10 +1035,8 @@ namespace PassShieldPasswordManager
             {
                 case "Yes":
                     await _loginSession.User.DeleteCredential(selectedCredential.CredentialId);
-                    await ViewCredentials();
                     break;
                 case "No":
-                    await ViewCredentials();
                     break;
             }
         }
@@ -898,8 +1044,46 @@ namespace PassShieldPasswordManager
         private async Task SearchCredential()
         {
             NewView();
-            var username = AnsiConsole.Ask<string>("Enter [green]Username[/] to search :");
-            await ViewCredentials(SortBy.None, SortOrder.None, username);
+            var name = AnsiConsole.Ask<string>("Enter [green]Name[/] to search :");
+            await ViewCredentials(SortBy.None, SortOrder.None, name);
+        }
+
+        private string GenerateRandomPassword()
+        {
+            var passwordGenerator = new RandomPasswordGenerator();
+
+            var options = AnsiConsole.Prompt(
+                new MultiSelectionPrompt<string>()
+                    .Title("Please select [green]following options[/], you can select multiple?")
+                    .NotRequired() 
+                    .PageSize(10)
+                    .InstructionsText(
+                        "[grey](Press [blue]<space>[/] to toggle a option, " + 
+                        "[green]<enter>[/] to accept)[/]")
+                    .AddChoices(new[] {
+                        "Include Uppercase", 
+                        "Include Numbers",
+                        "Include Special Chars"
+                    }));
+
+            foreach (var option in options)
+            {
+                switch (option)
+                {
+                    case "Include Uppercase":
+                        passwordGenerator.IncludeUppercase = true;
+                        break;
+                    case "Include Numbers":
+                        passwordGenerator.IncludeDigits = true;
+                        break;
+                    case "Include Special Chars":
+                        passwordGenerator.IncludeSpecialChars = true;
+                        break;
+                }
+            }
+            
+            passwordGenerator.Length = AnsiConsole.Ask<int>("Enter [green]length[/] of the password :", defaultValue: 12);
+            return passwordGenerator.Generate();
         }
         
         private void NewView()
@@ -913,7 +1097,7 @@ namespace PassShieldPasswordManager
             if (_loginSession.IsLoggedIn())
             {
                 AnsiConsole.Write(new Rule());
-                var loggedInUser = new Rule($"[yellow]Welcome {_loginSession.User.Name}[/]");
+                var loggedInUser = new Rule($"[yellow]Welcome {_loginSession.User.Name.EscapeMarkup()}[/]");
                 loggedInUser.Border = BoxBorder.None;
                 loggedInUser.Centered();
                 AnsiConsole.Write(loggedInUser);

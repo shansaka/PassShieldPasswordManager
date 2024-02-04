@@ -23,16 +23,16 @@ public class CredentialRepo
         }
     }
     
-    public async Task<List<Credentials>> GetCredentialList(int userId, string username = null)
+    public async Task<List<Credentials>> GetCredentialList(int userId, string name = null)
     {
         try
         {
-            if (!string.IsNullOrEmpty(username))
+            if (!string.IsNullOrEmpty(name))
             {
                 return await _dbConnection.Db.Credentials.Where(x => 
                     x.UserId == userId && 
                     x.IsDeleted == 0 && 
-                    x.Username.Contains(username)).ToListAsync();
+                    x.Name.Contains(name)).ToListAsync();
             }
             return await _dbConnection.Db.Credentials.Where(x => x.UserId == userId && x.IsDeleted == 0).ToListAsync();
         }
