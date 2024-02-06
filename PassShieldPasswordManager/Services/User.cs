@@ -19,7 +19,7 @@ public class User
         _credential = new Credential();
     }
 
-    public async Task UpdateCredential(Credential credential)
+    public async Task EditCredential(Credential credential)
     {
         try
         {
@@ -32,7 +32,7 @@ public class User
                     await website.Update();
                     break;
                 case CredentialDesktopApp desktopApp:
-                    await desktopApp.Update();
+                    await desktopApp.Edit();
                     break;
             }
         }
@@ -43,7 +43,7 @@ public class User
         }
     }
     
-    public async Task CreateCredential(Credential credential)
+    public async Task AddCredential(Credential credential)
     {
         try
         {
@@ -57,7 +57,7 @@ public class User
                     await website.Create();
                     break;
                 case CredentialDesktopApp desktopApp:
-                    await desktopApp.Create();
+                    await desktopApp.Add();
                     break;
             }
         }

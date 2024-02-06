@@ -16,7 +16,7 @@ public class CredentialDesktopApp : Credential
     }
 
 
-    public async Task Create()
+    public async Task Add()
     {
         try
         {
@@ -38,7 +38,7 @@ public class CredentialDesktopApp : Credential
         }
     }
     
-    public async Task Update()
+    public async Task Edit()
     {
         try
         {

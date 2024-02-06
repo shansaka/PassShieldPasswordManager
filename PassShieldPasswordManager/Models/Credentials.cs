@@ -14,7 +14,7 @@ public class Credentials
     public string UrlOrDeveloper { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime UpdatedDate { get; set; }
-    public int IsDeleted { get; set; }
+    public bool IsDeleted { get; set; }
 
     public Users User { get; set; }
     

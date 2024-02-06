@@ -36,14 +36,14 @@ public class SecurityQuestionRepo : IRepository<SecurityQuestions>
             var result = await _dbConnection.Database.SecurityQuestions.ToListAsync();
             if (!result.Any())
             {
-                var question1 = new SecurityQuestion
+                var question1 = new SecurityQuestions
                 {
                     Question = "What's your first pet name?"
                 };
                 _dbConnection.Database.SecurityQuestions.Add(question1);
                 await _dbConnection.Database.SaveChangesAsync();
                 
-                var question2 = new SecurityQuestion
+                var question2 = new SecurityQuestions
                 {
                     Question = "What city you have born?"
                 };

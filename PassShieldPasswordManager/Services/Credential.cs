@@ -94,4 +94,9 @@ public class Credential
         }
         return list;
     }
+
+    public string GenerateRandomPassword(RandomPasswordGenerator passwordGenerator)
+    {
+        return passwordGenerator.Generate();
+    }
 }

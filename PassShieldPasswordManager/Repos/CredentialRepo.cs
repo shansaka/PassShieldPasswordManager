@@ -21,7 +21,7 @@ public class CredentialRepo : IRepository<Credentials>
     {
         try
         {
-            return await _dbConnection.Database.Credentials.FirstOrDefaultAsync(x => x.CredentialId == id && x.IsDeleted == 0 );
+            return await _dbConnection.Database.Credentials.FirstOrDefaultAsync(x => x.CredentialId == id && x.IsDeleted == false );
         }
         catch (Exception e)
         {
@@ -34,7 +34,7 @@ public class CredentialRepo : IRepository<Credentials>
     {
         try
         {
-            return await _dbConnection.Database.Credentials.Include(x => x.User).Where(x => x.IsDeleted == 0).ToListAsync();
+            return await _dbConnection.Database.Credentials.Include(x => x.User).Where(x => x.IsDeleted == false).ToListAsync();
         }
         catch (Exception e)
         {
@@ -76,7 +76,7 @@ public class CredentialRepo : IRepository<Credentials>
     {
         try
         {
-            entity.IsDeleted = 1;
+            entity.IsDeleted = true;
             _dbConnection.Database.Credentials.Update(entity);
             await _dbConnection.Database.SaveChangesAsync();
         }
@@ -99,10 +99,10 @@ public class CredentialRepo : IRepository<Credentials>
             {
                 return await _dbConnection.Database.Credentials.Where(x => 
                     x.UserId == userId && 
-                    x.IsDeleted == 0 && 
+                    x.IsDeleted == false && 
                     x.Name.Contains(name)).ToListAsync();
             }
-            return await _dbConnection.Database.Credentials.Where(x => x.UserId == userId && x.IsDeleted == 0).ToListAsync();
+            return await _dbConnection.Database.Credentials.Where(x => x.UserId == userId && x.IsDeleted == false).ToListAsync();
         }
         catch (Exception e)
         {

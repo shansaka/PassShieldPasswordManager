@@ -7,10 +7,17 @@ namespace PassShieldPasswordManager
 {
     public class UserInterface
     {
-        private readonly Account _account = new();
-        private readonly SecurityQuestion _securityQuestion = new();
-        private readonly LoginSession _loginSession = LoginSession.Instance;
-        
+        private readonly Account _account;
+        private readonly SecurityQuestion _securityQuestion;
+        private readonly LoginSession _loginSession;
+
+        public UserInterface()
+        {
+            _securityQuestion = new SecurityQuestion();
+            _loginSession = LoginSession.Instance;
+            _account = new Account();
+        }
+
         public async Task Run()
         {
             try
@@ -389,7 +396,7 @@ namespace PassShieldPasswordManager
                     await AdminMenu();
                     break;
                 case "Logout":
-                    _loginSession.Logout();
+                    _account.Logout();
                     await ApplicationMenu();
                     break;
                 case "Exit":
@@ -633,7 +640,7 @@ namespace PassShieldPasswordManager
                         GameName = AnsiConsole.Ask<string>("Enter [green]Game Name[/] :"),
                         Developer = AnsiConsole.Ask<string>("Enter [green]Game developer[/] :")
                     };
-                    await _loginSession.User.CreateCredential(gameCredential);
+                    await _loginSession.User.AddCredential(gameCredential);
                     break;
                 case "Website":
                     var websiteCredential = new CredentialWebsite
@@ -643,7 +650,7 @@ namespace PassShieldPasswordManager
                         WebsiteName = AnsiConsole.Ask<string>("Enter [green]Website name[/] :"),
                         Url = AnsiConsole.Ask<string>("Enter [green]Website Url[/] :")
                     };
-                    await _loginSession.User.CreateCredential(websiteCredential);
+                    await _loginSession.User.AddCredential(websiteCredential);
                     break;
                 case "Desktop Application":
                     var desktopAppCredential = new CredentialDesktopApp
@@ -652,7 +659,7 @@ namespace PassShieldPasswordManager
                         Password = password,
                         DesktopAppName = AnsiConsole.Ask<string>("Enter [green]Desktop application name[/] :")
                     };
-                    await _loginSession.User.CreateCredential(desktopAppCredential);
+                    await _loginSession.User.AddCredential(desktopAppCredential);
                     break;
             }
             
@@ -966,7 +973,7 @@ namespace PassShieldPasswordManager
                     new TextPrompt<string>($"Enter [green]New Password[/] :")
                         .PromptStyle("red")
                         .Secret()
-                        .DefaultValue(selectedCredential.Password.EscapeMarkup())
+                        .DefaultValue(new Encryption(selectedCredential.Password).Decrypt().EscapeMarkup())
                 );
             }
             
@@ -983,7 +990,7 @@ namespace PassShieldPasswordManager
                         GameName = AnsiConsole.Ask($"Enter [green]Game Name[/] :", defaultValue: game.GameName.EscapeMarkup()),
                         Developer = AnsiConsole.Ask($"Enter [green]Game developer[/] :", defaultValue: game.Developer.EscapeMarkup())
                     };
-                    await _loginSession.User.UpdateCredential(gameCredential);
+                    await _loginSession.User.EditCredential(gameCredential);
                     break;
                 case CredentialWebsite website:
                     var websiteCredential = new CredentialWebsite
@@ -994,7 +1001,7 @@ namespace PassShieldPasswordManager
                         WebsiteName = AnsiConsole.Ask($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName.EscapeMarkup()),
                         Url = AnsiConsole.Ask($"Enter [green]Website Url[/] :", defaultValue: website.Url.EscapeMarkup())
                     };
-                    await _loginSession.User.UpdateCredential(websiteCredential);
+                    await _loginSession.User.EditCredential(websiteCredential);
                     break;
                 case CredentialDesktopApp desktopApp:
                     var desktopAppCredential = new CredentialDesktopApp
@@ -1005,7 +1012,7 @@ namespace PassShieldPasswordManager
                         Password = password,
                         DesktopAppName = AnsiConsole.Ask($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName.EscapeMarkup())
                     };
-                    await _loginSession.User.UpdateCredential(desktopAppCredential);
+                    await _loginSession.User.EditCredential(desktopAppCredential);
                     break;
             }
             
@@ -1079,7 +1086,7 @@ namespace PassShieldPasswordManager
             }
             
             passwordGenerator.Length = AnsiConsole.Ask("Enter [green]length[/] of the password :", defaultValue: 12);
-            return passwordGenerator.Generate();
+            return new Credential().GenerateRandomPassword(passwordGenerator);
         }
         
         private void NewView()

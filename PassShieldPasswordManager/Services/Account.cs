@@ -9,10 +9,12 @@ public class Account
 {
     private readonly UserRepo _userRepo;
     private readonly IMapper _mapper;
+    private readonly LoginSession _loginSession;
 
     public Account()
     {
         _mapper = AutoMapperConfiguration.Instance.Mapper;
+        _loginSession = LoginSession.Instance;
         _userRepo = new UserRepo();
     }
 
@@ -98,5 +100,10 @@ public class Account
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public void Logout()
+    {
+        _loginSession.Logout();
     }
 }

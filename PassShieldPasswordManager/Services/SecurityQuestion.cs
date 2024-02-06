@@ -5,8 +5,11 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class SecurityQuestion : SecurityQuestions
+public class SecurityQuestion 
 {
+    public int SecurityQuestionId { get; set; }
+    public string Question { get; set; }
+    
     private readonly SecurityQuestionRepo _securityQuestionRepo;
     private readonly IMapper _mapper;
 
