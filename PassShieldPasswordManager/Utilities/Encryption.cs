@@ -47,7 +47,7 @@ public class Encryption
         var message = Encoding.UTF8.GetBytes(Text);
         using (var alg = SHA512.Create())
         {
-            string hex = "";
+            var hex = "";
 
             var hashValue = alg.ComputeHash(message);
             foreach (byte x in hashValue)

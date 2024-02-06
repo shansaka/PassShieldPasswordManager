@@ -1,18 +1,21 @@
-using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class CredentialGame : Credential
 {
     public string GameName { get; set; }
     public string Developer { get; set; }
     
-    private readonly CredentialRepo _credentialRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
-    
+    private readonly CredentialRepo _credentialRepo;
+
+    public CredentialGame()
+    {
+        _credentialRepo = new CredentialRepo();
+    }
+
     public async Task Create()
     {
         try
@@ -24,9 +27,10 @@ public class CredentialGame : Credential
                 Name = GameName,
                 UrlOrDeveloper = Developer,
                 UserId = User.UserId,
-                Type = (int)CredentialType.Game
+                Type = (int)CredentialType.Game,
+                CreatedDate = DateTime.Now
             };
-            await _credentialRepo.CreateCredential(credentials);
+            await _credentialRepo.Add(credentials);
         }
         catch (Exception e)
         {
@@ -39,16 +43,16 @@ public class CredentialGame : Credential
     {
         try
         {
-            var credentials = new Credentials
+            var credentials = await _credentialRepo.GetById(CredentialId);
+            if (credentials != null)
             {
-                CredentialId = CredentialId,
-                Username = Username,
-                Password = new Encryption(Password).Encrypt(),
-                Name = GameName,
-                UrlOrDeveloper = Developer,
-                Type = (int)CredentialType.Game
-            };
-            await _credentialRepo.UpdateCredential(credentials);
+                credentials.Username = Username;
+                credentials.Password = new Encryption(Password).Encrypt();
+                credentials.Name = GameName;
+                credentials.UrlOrDeveloper = Developer;
+                credentials.UpdatedDate = DateTime.Now;
+                await _credentialRepo.Update(credentials);
+            }
         }
         catch (Exception e)
         {

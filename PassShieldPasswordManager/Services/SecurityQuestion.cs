@@ -3,19 +3,25 @@ using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class SecurityQuestion : SecurityQuestions
 {
-    private readonly SecurityQuestionRepo _securityQuestionRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
+    private readonly SecurityQuestionRepo _securityQuestionRepo;
+    private readonly IMapper _mapper;
 
-    
+    public SecurityQuestion()
+    {
+        _mapper = AutoMapperConfiguration.Instance.Mapper;
+        _securityQuestionRepo = new SecurityQuestionRepo();
+    }
+
+
     public async Task<List<SecurityQuestion>> GetList()
     {
         try
         {
-            return _mapper.Map<List<SecurityQuestion>>(await _securityQuestionRepo.GetList());
+            return _mapper.Map<List<SecurityQuestion>>(await _securityQuestionRepo.GetAll());
         }
         catch (Exception e)
         {

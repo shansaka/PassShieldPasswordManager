@@ -1,18 +1,21 @@
-using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class CredentialWebsite : Credential
 {
     public string WebsiteName { get; set; }
     public string Url { get; set; }
     
-    private readonly CredentialRepo _credentialRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
-    
+    private readonly CredentialRepo _credentialRepo;
+
+    public CredentialWebsite()
+    {
+        _credentialRepo = new CredentialRepo();
+    }
+
     public async Task Create()
     {
         try
@@ -24,9 +27,10 @@ public class CredentialWebsite : Credential
                 Name = WebsiteName,
                 UrlOrDeveloper = Url,
                 UserId = User.UserId,
-                Type = (int)CredentialType.Website
+                Type = (int)CredentialType.Website,
+                CreatedDate = DateTime.Now
             };
-            await _credentialRepo.CreateCredential(credentials);
+            await _credentialRepo.Add(credentials);
         }
         catch (Exception e)
         {
@@ -39,16 +43,16 @@ public class CredentialWebsite : Credential
     {
         try
         {
-            var credentials = new Credentials
+            var credentials = await _credentialRepo.GetById(CredentialId);
+            if (credentials != null)
             {
-                CredentialId = CredentialId,
-                Username = Username,
-                Password = new Encryption(Password).Encrypt(),
-                Name = WebsiteName,
-                UrlOrDeveloper = Url,
-                Type = (int)CredentialType.Website
-            };
-            await _credentialRepo.UpdateCredential(credentials);
+                credentials.Username = Username;
+                credentials.Password = new Encryption(Password).Encrypt();
+                credentials.Name = WebsiteName;
+                credentials.UrlOrDeveloper = Url;
+                credentials.UpdatedDate = DateTime.Now;
+                await _credentialRepo.Update(credentials);
+            }
         }
         catch (Exception e)
         {

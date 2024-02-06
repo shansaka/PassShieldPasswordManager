@@ -1,10 +1,9 @@
-using System.Runtime.InteropServices;
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class Credential
 {
@@ -16,15 +15,20 @@ public class Credential
     
     public User User { get; set; }
     
-    private readonly CredentialRepo _credentialRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
-    
+    private readonly CredentialRepo _credentialRepo;
+    private readonly IMapper _mapper;
+
+    public Credential()
+    {
+        _mapper = AutoMapperConfiguration.Instance.Mapper;
+        _credentialRepo = new CredentialRepo();
+    }
+
     public async Task<List<Credential>> GetList(User user, string name = null)
     {
         try
         {
-            
-            var result = await _credentialRepo.GetCredentialList(user.UserId, name);
+            var result = await _credentialRepo.GetAllByUserId(user.UserId, name);
             return MapCredentialTypes(result);
         }
         catch (Exception e)
@@ -38,7 +42,7 @@ public class Credential
     {
         try
         {
-            var result = await _credentialRepo.GetCredentialList();
+            var result = await _credentialRepo.GetAll();
             return MapCredentialTypes(result);
         }
         catch (Exception e)
@@ -52,7 +56,8 @@ public class Credential
     {
         try
         {
-            await _credentialRepo.DeleteCredential(credentialId);
+            var credentials = await _credentialRepo.GetById(credentialId);
+            await _credentialRepo.Delete(credentials);
         }
         catch (Exception e)
         {
@@ -61,7 +66,7 @@ public class Credential
         }
     }
 
-    private List<Credential> MapCredentialTypes(List<Credentials> credentials)
+    private List<Credential> MapCredentialTypes(IEnumerable<Credentials> credentials)
     {
         var list = new List<Credential>();
         foreach (var item in credentials)

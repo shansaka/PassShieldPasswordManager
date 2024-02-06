@@ -1,12 +1,13 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
+using PassShieldPasswordManager.Services;
 
 namespace PassShieldPasswordManager.Utilities;
 
 public class AutoMapperConfiguration
 {
     private static AutoMapperConfiguration _instance;
-    private IMapper _mapper;
+    private readonly IMapper _mapper;
     
     private AutoMapperConfiguration()
     {

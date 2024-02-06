@@ -4,17 +4,24 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 
-public class CredentialRepo
+public class CredentialRepo : IRepository<Credentials>
 {
-    private readonly DbConnection _dbConnection = DbConnection.Instance;
+    private readonly DbConnection _dbConnection;
+
+    private readonly DbContext _database = new Context();
     
-    public async Task CreateCredential(Credentials credentials)
+    public CredentialRepo()
+    {
+        _dbConnection = DbConnection.Instance;
+    }
+
+    #region Common Methods
+
+    public async Task<Credentials> GetById(int id)
     {
         try
         {
-            credentials.CreatedDate = DateTime.Now;
-            await _dbConnection.Db.Credentials.AddAsync(credentials);
-            await _dbConnection.Db.SaveChangesAsync();
+            return await _dbConnection.Database.Credentials.FirstOrDefaultAsync(x => x.CredentialId == id && x.IsDeleted == 0 );
         }
         catch (Exception e)
         {
@@ -22,19 +29,80 @@ public class CredentialRepo
             throw;
         }
     }
-    
-    public async Task<List<Credentials>> GetCredentialList(int userId, string name = null)
+
+    public async Task<IEnumerable<Credentials>> GetAll()
+    {
+        try
+        {
+            return await _dbConnection.Database.Credentials.Include(x => x.User).Where(x => x.IsDeleted == 0).ToListAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<Credentials> Add(Credentials entity)
+    {
+        try
+        {
+            await _dbConnection.Database.Credentials.AddAsync(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+            return entity;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task Update(Credentials entity)
+    {
+        try
+        {
+            _dbConnection.Database.Credentials.Update(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task Delete(Credentials entity)
+    {
+        try
+        {
+            entity.IsDeleted = 1;
+            _dbConnection.Database.Credentials.Update(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    #endregion
+
+    #region Custom Methods
+
+    public async Task<List<Credentials>> GetAllByUserId(int userId, string name = null)
     {
         try
         {
             if (!string.IsNullOrEmpty(name))
             {
-                return await _dbConnection.Db.Credentials.Where(x => 
+                return await _dbConnection.Database.Credentials.Where(x => 
                     x.UserId == userId && 
                     x.IsDeleted == 0 && 
                     x.Name.Contains(name)).ToListAsync();
             }
-            return await _dbConnection.Db.Credentials.Where(x => x.UserId == userId && x.IsDeleted == 0).ToListAsync();
+            return await _dbConnection.Database.Credentials.Where(x => x.UserId == userId && x.IsDeleted == 0).ToListAsync();
         }
         catch (Exception e)
         {
@@ -43,56 +111,5 @@ public class CredentialRepo
         }
     }
     
-    public async Task<List<Credentials>> GetCredentialList()
-    {
-        try
-        {
-            return await _dbConnection.Db.Credentials.Include(x => x.User).Where(x => x.IsDeleted == 0).ToListAsync();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task UpdateCredential(Credentials credentials)
-    {
-        try
-        {
-            var obj = await _dbConnection.Db.Credentials.FirstOrDefaultAsync(x => x.CredentialId == credentials.CredentialId);
-            if (obj != null)
-            {
-                obj.Username = credentials.Username;
-                obj.Password = credentials.Password;
-                obj.Name = credentials.Name;
-                obj.UrlOrDeveloper = credentials.UrlOrDeveloper;
-                obj.UpdatedDate = DateTime.Now;
-                await _dbConnection.Db.SaveChangesAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task DeleteCredential(int credentialId)
-    {
-        try
-        {
-            var obj = await _dbConnection.Db.Credentials.FirstOrDefaultAsync(x => x.CredentialId == credentialId);
-            if (obj != null)
-            {
-                obj.IsDeleted = 1;
-                await _dbConnection.Db.SaveChangesAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
+    #endregion
 }

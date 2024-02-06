@@ -4,21 +4,22 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 
-public class UserRepo
+public class UserRepo : IRepository<Users>
 {
-    private readonly DbConnection _dbConnection = DbConnection.Instance;
-    
-    public async Task<Users> Login(string username, string password)
+    private readonly DbConnection _dbConnection;
+
+    public UserRepo()
+    {
+        _dbConnection = DbConnection.Instance;
+    }
+
+    #region Common Methods
+
+    public async Task<Users> GetById(int id)
     {
         try
         {
-            // Encrypting the password
-            password = new Encryption(password).CreateSha512();
-            
-            var result =
-                await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.Username == username && x.Password == password);
-            
-            return result;
+            return await _dbConnection.Database.Users.FirstOrDefaultAsync(x => x.UserId == id && x.IsDeleted == false );
         }
         catch (Exception e)
         {
@@ -27,14 +28,78 @@ public class UserRepo
         }
     }
 
-    public async Task<Users> CreateUser(Users user)
+    public async Task<IEnumerable<Users>> GetAll()
     {
         try
         {
-            user.Password = new Encryption(user.Password).CreateSha512();
-            await _dbConnection.Db.Users.AddAsync(user);
-            await _dbConnection.Db.SaveChangesAsync();
-            return user;
+            return await _dbConnection.Database.Users.Where(x => x.IsDeleted == false).ToListAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<Users> Add(Users entity)
+    {
+        try
+        {
+            await _dbConnection.Database.Users.AddAsync(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+            return entity;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task Update(Users entity)
+    {
+        try
+        {
+            _dbConnection.Database.Users.Update(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task Delete(Users entity)
+    {
+        try
+        {
+            entity.IsDeleted = true;
+            _dbConnection.Database.Users.Update(entity);
+            await _dbConnection.Database.SaveChangesAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    #endregion
+    
+    #region Custom Methods
+
+    public async Task<Users> Login(string username, string password)
+    {
+        try
+        {
+            // Encrypting the password
+            password = new Encryption(password).CreateSha512();
+            
+            var result =
+                await _dbConnection.Database.Users.FirstOrDefaultAsync(x => x.Username == username && x.Password == password);
+            
+            return result;
         }
         catch (Exception e)
         {
@@ -47,7 +112,7 @@ public class UserRepo
     {
         try
         {
-            var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.Username == username);
+            var result = await _dbConnection.Database.Users.FirstOrDefaultAsync(x => x.Username == username);
             return result;
         }
         catch (Exception e)
@@ -56,12 +121,12 @@ public class UserRepo
             throw;
         }
     }
-
+    
     public async Task<bool> VerifySecurityAnswer(int userId, int securityQuestionId, string securityAnswer)
     {
         try
         {
-            var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.SecurityQuestionId == securityQuestionId);
+            var result = await _dbConnection.Database.Users.FirstOrDefaultAsync(x => x.UserId == userId && x.SecurityQuestionId == securityQuestionId);
             return result != null && result.SecurityAnswer == securityAnswer;
         }
         catch (Exception e)
@@ -71,70 +136,6 @@ public class UserRepo
         }
     }
 
-    public async Task ResetPassword(int userId, string newPassword)
-    {
-        try
-        {
-            var result = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
-            if (result != null)
-            {
-                result.Password = new Encryption(newPassword).CreateSha512();
-                await _dbConnection.Db.SaveChangesAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task<List<Users>> GetUsers()
-    {
-        try
-        {
-            return await _dbConnection.Db.Users.Where(x => x.IsDeleted == false).ToListAsync();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task MakeUserAdmin(int userId)
-    {
-        try
-        {
-            var user = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
-            if (user != null)
-            {
-                user.IsAdmin = true;
-                await _dbConnection.Db.SaveChangesAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-    public async Task DeleteUser(int userId)
-    {
-        try
-        {
-            var user = await _dbConnection.Db.Users.FirstOrDefaultAsync(x => x.UserId == userId);
-            if (user != null)
-            {
-                user.IsDeleted = true;
-                await _dbConnection.Db.SaveChangesAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
+    #endregion
+    
 }

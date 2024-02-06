@@ -3,12 +3,18 @@ using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class Account
 {
-    private readonly UserRepo _userRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
+    private readonly UserRepo _userRepo;
+    private readonly IMapper _mapper;
+
+    public Account()
+    {
+        _mapper = AutoMapperConfiguration.Instance.Mapper;
+        _userRepo = new UserRepo();
+    }
 
     public async Task<User> Login(string username, string password)
     {
@@ -34,7 +40,8 @@ public class Account
         try
         {
             var users = _mapper.Map<Users>(user);
-            return _mapper.Map<User>(await _userRepo.CreateUser(users));
+            users.Password = new Encryption(users.Password).CreateSha512();
+            return _mapper.Map<User>(await _userRepo.Add(users));
         }
         catch (Exception e)
         {
@@ -79,7 +86,12 @@ public class Account
     {
         try
         {
-            await _userRepo.ResetPassword(userId, newPassword);
+            var user = await _userRepo.GetById(userId);
+            if (user != null)
+            {
+                user.Password = new Encryption(newPassword).CreateSha512();
+                await _userRepo.Update(user);
+            }
         }
         catch (Exception e)
         {

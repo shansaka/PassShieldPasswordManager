@@ -1,16 +1,19 @@
-using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class CredentialDesktopApp : Credential
 {
     public string DesktopAppName { get; set; }
     
-    private readonly CredentialRepo _credentialRepo = new();
-    private readonly IMapper _mapper = AutoMapperConfiguration.Instance.Mapper;
+    private readonly CredentialRepo _credentialRepo;
+
+    public CredentialDesktopApp()
+    {
+        _credentialRepo = new CredentialRepo();
+    }
 
 
     public async Task Create()
@@ -23,9 +26,10 @@ public class CredentialDesktopApp : Credential
                 Username = Username,
                 Password = new Encryption(Password).Encrypt(),
                 Name = DesktopAppName,
-                Type = (int)CredentialType.DesktopApp
+                Type = (int)CredentialType.DesktopApp,
+                CreatedDate = DateTime.Now
             };
-            await _credentialRepo.CreateCredential(credentials);
+            await _credentialRepo.Add(credentials);
         }
         catch (Exception e)
         {
@@ -38,16 +42,15 @@ public class CredentialDesktopApp : Credential
     {
         try
         {
-            var credentials = new Credentials
+            var credentials = await _credentialRepo.GetById(CredentialId);
+            if (credentials != null)
             {
-                CredentialId = CredentialId,
-                Username = Username,
-                Password = new Encryption(Password).Encrypt(),
-                Name = DesktopAppName,
-                UserId = User.UserId,
-                Type = (int)CredentialType.DesktopApp
-            };
-            await _credentialRepo.UpdateCredential(credentials);
+                credentials.Username = Username;
+                credentials.Password = new Encryption(Password).Encrypt();
+                credentials.Name = DesktopAppName;
+                credentials.UpdatedDate = DateTime.Now;
+                await _credentialRepo.Update(credentials);
+            }
         }
         catch (Exception e)
         {

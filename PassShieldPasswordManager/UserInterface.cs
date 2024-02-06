@@ -1,3 +1,5 @@
+ using System.Globalization;
+ using PassShieldPasswordManager.Services;
  using PassShieldPasswordManager.Utilities;
 using Spectre.Console;
 
@@ -98,8 +100,10 @@ namespace PassShieldPasswordManager
         {
             NewView();
 
-            var newUser = new User();
-            newUser.Name = AnsiConsole.Ask<string>("Enter [green]Name[/] :");
+            var newUser = new User
+            {
+                Name = AnsiConsole.Ask<string>("Enter [green]Name[/] :")
+            };
 
             var usernameExists = true;
             while (usernameExists)
@@ -454,12 +458,12 @@ namespace PassShieldPasswordManager
                         var style = i == selectedRowIndex ? "[bold red]" : "[]";
                         var isAdmin = "No";
 
-                        if (user is Admin adminUser)
+                        if (user is Admin)
                         {
                             isAdmin = "Yes";
                         }
 
-                        string createdDateText = (user.DateCreated == DateTime.MinValue) ? "" : user.DateCreated.ToString();
+                        string createdDateText = (user.DateCreated == DateTime.MinValue) ? "" : user.DateCreated.ToString(CultureInfo.InvariantCulture);
 
                         table.AddRow(
                             $"{style}{user.Name.EscapeMarkup()}[/]",
@@ -497,8 +501,6 @@ namespace PassShieldPasswordManager
                             break;
                         case ConsoleKey.B:
                             await AdminMenu();
-                            break;
-                        default:
                             break;
                     }
 
@@ -710,8 +712,8 @@ namespace PassShieldPasswordManager
                             break;
                     }
 
-                    string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
-                    string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
+                    var createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString(CultureInfo.InvariantCulture);
+                    var updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString(CultureInfo.InvariantCulture);
 
                     table.AddRow(
                         $"{style}{credential.Username.EscapeMarkup()}[/]",
@@ -765,8 +767,6 @@ namespace PassShieldPasswordManager
                         break;
                     case ConsoleKey.B:
                         await MainMenu();
-                        break;
-                    default:
                         break;
                 }
 
@@ -829,8 +829,8 @@ namespace PassShieldPasswordManager
                                 break;
                         }
 
-                        string createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString();
-                        string updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString();
+                        var createdDateText = (credential.CreatedDate == DateTime.MinValue) ? "" : credential.CreatedDate.ToString(CultureInfo.InvariantCulture);
+                        var updatedDateText = (credential.UpdatedDate == DateTime.MinValue) ? "" : credential.UpdatedDate.ToString(CultureInfo.InvariantCulture);
 
                         table.AddRow(
                             $"{style}{credential.User.Name.EscapeMarkup()}[/]",
@@ -880,8 +880,6 @@ namespace PassShieldPasswordManager
                         case ConsoleKey.B:
                             await AdminMenu();
                             break;
-                        default:
-                            break;
                     }
 
                     Console.Clear(); 
@@ -928,7 +926,7 @@ namespace PassShieldPasswordManager
         {
             NewView();
             AnsiConsole.WriteLine($"Type the field you want to update, if you doesn't need to update a field just press ENTER.");
-            var username = AnsiConsole.Ask<string>($"Enter [green]Username[/] :", defaultValue: selectedCredential.Username.EscapeMarkup());
+            var username = AnsiConsole.Ask($"Enter [green]Username[/] :", defaultValue: selectedCredential.Username.EscapeMarkup());
             var generateRandomPassword = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .Title("Do you want a random password generated?")
@@ -982,8 +980,8 @@ namespace PassShieldPasswordManager
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
                         Password = password,
-                        GameName = AnsiConsole.Ask<string>($"Enter [green]Game Name[/] :", defaultValue: game.GameName.EscapeMarkup()),
-                        Developer = AnsiConsole.Ask<string>($"Enter [green]Game developer[/] :", defaultValue: game.Developer.EscapeMarkup())
+                        GameName = AnsiConsole.Ask($"Enter [green]Game Name[/] :", defaultValue: game.GameName.EscapeMarkup()),
+                        Developer = AnsiConsole.Ask($"Enter [green]Game developer[/] :", defaultValue: game.Developer.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(gameCredential);
                     break;
@@ -993,8 +991,8 @@ namespace PassShieldPasswordManager
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
                         Password = password,
-                        WebsiteName = AnsiConsole.Ask<string>($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName.EscapeMarkup()),
-                        Url = AnsiConsole.Ask<string>($"Enter [green]Website Url[/] :", defaultValue: website.Url.EscapeMarkup())
+                        WebsiteName = AnsiConsole.Ask($"Enter [green]Website name[/] :", defaultValue: website.WebsiteName.EscapeMarkup()),
+                        Url = AnsiConsole.Ask($"Enter [green]Website Url[/] :", defaultValue: website.Url.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(websiteCredential);
                     break;
@@ -1005,11 +1003,9 @@ namespace PassShieldPasswordManager
                         User = _loginSession.User,
                         Username = username,
                         Password = password,
-                        DesktopAppName = AnsiConsole.Ask<string>($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName.EscapeMarkup())
+                        DesktopAppName = AnsiConsole.Ask($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName.EscapeMarkup())
                     };
                     await _loginSession.User.UpdateCredential(desktopAppCredential);
-                    break;
-                default:
                     break;
             }
             
@@ -1082,7 +1078,7 @@ namespace PassShieldPasswordManager
                 }
             }
             
-            passwordGenerator.Length = AnsiConsole.Ask<int>("Enter [green]length[/] of the password :", defaultValue: 12);
+            passwordGenerator.Length = AnsiConsole.Ask("Enter [green]length[/] of the password :", defaultValue: 12);
             return passwordGenerator.Generate();
         }
         

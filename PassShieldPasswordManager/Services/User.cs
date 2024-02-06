@@ -1,7 +1,6 @@
-using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager;
+namespace PassShieldPasswordManager.Services;
 
 public class User 
 {
@@ -13,7 +12,12 @@ public class User
     public string SecurityAnswer { get; set; }
     public DateTime DateCreated { get; set; }
     
-    private readonly Credential _credential = new();
+    private readonly Credential _credential;
+
+    public User()
+    {
+        _credential = new Credential();
+    }
 
     public async Task UpdateCredential(Credential credential)
     {
