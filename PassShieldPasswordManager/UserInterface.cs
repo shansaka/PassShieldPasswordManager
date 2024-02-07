@@ -16,8 +16,18 @@ namespace PassShieldPasswordManager
             _securityQuestion = new SecurityQuestion();
             _loginSession = LoginSession.Instance;
             _account = new Account();
+            InitializeAsync().Wait();
         }
 
+        private async Task InitializeAsync()
+        {
+            if(_loginSession.IsLoggedIn()){
+                var username = _loginSession.LoggedInUsername;
+                var user = await _account.VerifyUsername(username);
+                _loginSession.Login(user);
+            }
+        }
+        
         public async Task Run()
         {
             try
