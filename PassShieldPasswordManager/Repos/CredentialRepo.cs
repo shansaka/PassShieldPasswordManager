@@ -1,23 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 
-public class CredentialRepo : IRepository<Credentials>
+public class CredentialRepo : ICredentialRepo
 {
-    private readonly DbConnection _dbConnection;
-
-    private readonly DbContext _database = new Context();
+    private readonly DbConnection _dbConnection = DbConnection.Instance;
     
-    public CredentialRepo()
-    {
-        _dbConnection = DbConnection.Instance;
-    }
-
     #region Common Methods
 
-    public async Task<Credentials> GetById(int id)
+    public async Task<CredentialModel> GetById(int id)
     {
         try
         {
@@ -30,7 +24,7 @@ public class CredentialRepo : IRepository<Credentials>
         }
     }
 
-    public async Task<IEnumerable<Credentials>> GetAll()
+    public async Task<IEnumerable<CredentialModel>> GetAll()
     {
         try
         {
@@ -43,7 +37,7 @@ public class CredentialRepo : IRepository<Credentials>
         }
     }
 
-    public async Task<Credentials> Add(Credentials entity)
+    public async Task<CredentialModel> Add(CredentialModel entity)
     {
         try
         {
@@ -58,7 +52,7 @@ public class CredentialRepo : IRepository<Credentials>
         }
     }
 
-    public async Task Update(Credentials entity)
+    public async Task Update(CredentialModel entity)
     {
         try
         {
@@ -72,7 +66,7 @@ public class CredentialRepo : IRepository<Credentials>
         }
     }
 
-    public async Task Delete(Credentials entity)
+    public async Task Delete(CredentialModel entity)
     {
         try
         {
@@ -91,7 +85,7 @@ public class CredentialRepo : IRepository<Credentials>
 
     #region Custom Methods
 
-    public async Task<List<Credentials>> GetAllByUserId(int userId, string name = null)
+    public async Task<List<CredentialModel>> GetAllByUserId(int userId, string name = null)
     {
         try
         {

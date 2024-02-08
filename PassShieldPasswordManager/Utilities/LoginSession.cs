@@ -26,7 +26,24 @@ public class LoginSession
 
     public bool IsLoggedIn()
     {
-        return !string.IsNullOrEmpty(_loggedInUsername);
+        try
+        {
+            _loggedInUsername =  File.ReadAllText("logged_in_user.txt");
+            if (!string.IsNullOrEmpty(_loggedInUsername))
+            {
+                _loggedInUsername = new Encryption(_loggedInUsername).Decrypt();
+            }
+            return !string.IsNullOrEmpty(_loggedInUsername);
+        }
+        catch (FileNotFoundException)
+        {
+            return false;
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine("An error occurred while reading the file: " + ex.Message);
+            return false;
+        }
     }
 
     public string LoggedInUsername

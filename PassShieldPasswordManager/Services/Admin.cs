@@ -1,23 +1,25 @@
 using AutoMapper;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
+using Mapper = PassShieldPasswordManager.Utilities.Mapper;
 
 namespace PassShieldPasswordManager.Services;
 
 public class Admin : User
 {
-
+    private readonly ICredentialRepo _credentialRepo;
     private readonly Credential _credential;
-    private readonly UserRepo _userRepo;
-    private readonly IMapper _mapper;
+    private readonly IUserRepo _userRepo;
+    private readonly Mapper _mapper = new Mapper();
 
-    public Admin()
+    public Admin(IUserRepo userRepo, ICredentialRepo credentialRepo) : base(credentialRepo)
     {
-        _userRepo = new UserRepo();
-        _mapper = AutoMapperConfiguration.Instance.Mapper;
-        _credential = new Credential();
+        _userRepo = userRepo;
+        _credentialRepo = credentialRepo;
+        _credential = new Credential(_credentialRepo);
     }
-
+    
     public async Task<List<Credential>> ViewAllCredentials()
     {
         var credentialsList = await _credential.GetList(this);
@@ -28,9 +30,20 @@ public class Admin : User
     {
         var returnList = new List<User>();
         var users = await _userRepo.GetAll();
-        foreach (var user in users)
+        foreach (var userModel in users)
         {
-            returnList.Add(user.IsAdmin ? _mapper.Map<Admin>(user) : _mapper.Map<User>(user));
+                
+            if (userModel.IsAdmin)
+            {
+                var admin = new Admin(_userRepo, _credentialRepo);
+                returnList.Add(_mapper.MapToUser(userModel, admin));
+            }
+            else
+            {
+                var user = new User(_credentialRepo);
+                returnList.Add(_mapper.MapToUser(userModel, user));
+            }
+            
         }
         return returnList;
     }

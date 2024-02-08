@@ -12,12 +12,12 @@ public class AutoMapperConfiguration
     private AutoMapperConfiguration()
     {
         var config = new MapperConfiguration(cfg => {
-            cfg.CreateMap<Users, User>().ReverseMap();
-            cfg.CreateMap<Users, Admin>().ReverseMap();
-            cfg.CreateMap<SecurityQuestions, SecurityQuestion>().ReverseMap();
-            cfg.CreateMap<Credentials, CredentialWebsite>().ReverseMap();
-            cfg.CreateMap<Credentials, CredentialGame>().ReverseMap();
-            cfg.CreateMap<Credentials, CredentialDesktopApp>().ReverseMap();
+            cfg.CreateMap<UserModel, User>().ReverseMap();
+            cfg.CreateMap<UserModel, Admin>().ReverseMap();
+            cfg.CreateMap<SecurityQuestionModel, SecurityQuestion>().ReverseMap();
+            cfg.CreateMap<CredentialModel, CredentialWebsite>().ReverseMap();
+            cfg.CreateMap<CredentialModel, CredentialGame>().ReverseMap();
+            cfg.CreateMap<CredentialModel, CredentialDesktopApp>().ReverseMap();
         });
 
         _mapper = config.CreateMapper();

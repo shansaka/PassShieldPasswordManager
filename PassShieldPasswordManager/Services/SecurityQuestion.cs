@@ -1,7 +1,9 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
+using Mapper = PassShieldPasswordManager.Utilities.Mapper;
 
 namespace PassShieldPasswordManager.Services;
 
@@ -10,14 +12,13 @@ public class SecurityQuestion
     public int SecurityQuestionId { get; set; }
     public string Question { get; set; }
     
-    private readonly SecurityQuestionRepo _securityQuestionRepo;
-    private readonly IMapper _mapper;
+    private readonly ISecurityQuestionRepo _securityQuestionRepo;
+    private readonly Mapper _mapper = new Mapper();
     
 
-    public SecurityQuestion()
+    public SecurityQuestion(ISecurityQuestionRepo securityQuestionRepo)
     {
-        _mapper = AutoMapperConfiguration.Instance.Mapper;
-        _securityQuestionRepo = new SecurityQuestionRepo();
+        _securityQuestionRepo = securityQuestionRepo;
     }
 
 
@@ -25,7 +26,13 @@ public class SecurityQuestion
     {
         try
         {
-            return _mapper.Map<List<SecurityQuestion>>(await _securityQuestionRepo.GetAll());
+            var returnList = new List<SecurityQuestion>();
+            var list = await _securityQuestionRepo.GetAll();
+            foreach (var item in list)
+            {
+                returnList.Add(_mapper.MapToSecurityQuestion(item, new SecurityQuestion(_securityQuestionRepo)));
+            }
+            return returnList;
         }
         catch (Exception e)
         {
@@ -38,7 +45,7 @@ public class SecurityQuestion
     {
         try
         {
-            return _mapper.Map<SecurityQuestion>(await _securityQuestionRepo.GetById(id));
+            return _mapper.MapToSecurityQuestion(await _securityQuestionRepo.GetById(id), new SecurityQuestion(_securityQuestionRepo));
         }
         catch (Exception e)
         {

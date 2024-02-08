@@ -1,7 +1,9 @@
 using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
+using Mapper = PassShieldPasswordManager.Utilities.Mapper;
 
 namespace PassShieldPasswordManager.Services;
 
@@ -15,13 +17,12 @@ public class Credential : ICredential
     
     public User User { get; set; }
     
-    private readonly CredentialRepo _credentialRepo;
-    private readonly IMapper _mapper;
-
-    public Credential()
+    private readonly ICredentialRepo _credentialRepo;
+    //private readonly IMapper _mapper;
+    private readonly Mapper _mapper = new Mapper();
+    public Credential(ICredentialRepo credentialRepo)
     {
-        _mapper = AutoMapperConfiguration.Instance.Mapper;
-        _credentialRepo = new CredentialRepo();
+        _credentialRepo = credentialRepo;
     }
 
     public async Task<List<Credential>> GetList(User user, string name = null)
@@ -66,7 +67,7 @@ public class Credential : ICredential
         }
     }
 
-    private List<Credential> MapCredentialTypes(IEnumerable<Credentials> credentials)
+    private List<Credential> MapCredentialTypes(IEnumerable<CredentialModel> credentials)
     {
         var list = new List<Credential>();
         foreach (var item in credentials)
@@ -74,19 +75,22 @@ public class Credential : ICredential
             switch (item.Type)
             {
                 case (int)CredentialType.Game:
-                    var credentialGame = _mapper.Map<CredentialGame>(item);
+                    var credentialGame = new CredentialGame(_credentialRepo);
+                    credentialGame = _mapper.MapToCredential(item, credentialGame);
                     credentialGame.GameName = item.Name;
                     credentialGame.Developer = item.UrlOrDeveloper;
                     list.Add(credentialGame);
                     break;
                 case (int)CredentialType.Website:
-                    var credentialWebsite = _mapper.Map<CredentialWebsite>(item);
+                    var credentialWebsite = new CredentialWebsite(_credentialRepo);
+                    credentialWebsite = _mapper.MapToCredential(item, credentialWebsite);
                     credentialWebsite.WebsiteName = item.Name;
                     credentialWebsite.Url = item.UrlOrDeveloper;
                     list.Add(credentialWebsite);
                     break;
                 case (int)CredentialType.DesktopApp:
-                    var credentialDesktopApp = _mapper.Map<CredentialDesktopApp>(item);
+                    var credentialDesktopApp = new CredentialDesktopApp(_credentialRepo);
+                    credentialDesktopApp = _mapper.MapToCredential(item, credentialDesktopApp);
                     credentialDesktopApp.DesktopAppName = item.Name;
                     list.Add(credentialDesktopApp);
                     break;

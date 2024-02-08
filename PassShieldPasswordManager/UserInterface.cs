@@ -1,4 +1,6 @@
  using System.Globalization;
+ using AutoMapper;
+ using PassShieldPasswordManager.Repos.Interfaces;
  using PassShieldPasswordManager.Services;
  using PassShieldPasswordManager.Utilities;
 using Spectre.Console;
@@ -7,15 +9,21 @@ namespace PassShieldPasswordManager
 {
     public class UserInterface
     {
+        private readonly LoginSession _loginSession = LoginSession.Instance;
+        private readonly ICredentialRepo _credentialRepo;
+        
         private readonly Account _account;
         private readonly SecurityQuestion _securityQuestion;
-        private readonly LoginSession _loginSession;
+        private readonly Credential _credential;
+        
 
-        public UserInterface()
+        public UserInterface(IUserRepo userRepo, ISecurityQuestionRepo securityQuestionRepo, ICredentialRepo credentialRepo)
         {
-            _securityQuestion = new SecurityQuestion();
-            _loginSession = LoginSession.Instance;
-            _account = new Account();
+            _credentialRepo = credentialRepo;
+            _securityQuestion = new SecurityQuestion(securityQuestionRepo);
+            _account = new Account(userRepo, _credentialRepo);
+            _credential = new Credential(_credentialRepo);
+
             InitializeAsync().Wait();
         }
 
@@ -117,7 +125,7 @@ namespace PassShieldPasswordManager
         {
             NewView();
 
-            var newUser = new User
+            var newUser = new User(_credentialRepo)
             {
                 Name = AnsiConsole.Ask<string>("Enter [green]Name[/] :")
             };
@@ -188,7 +196,7 @@ namespace PassShieldPasswordManager
             await MainMenu();
         }
 
-        private async Task Exit()
+        private async Task Exit(bool isMainMenu = false)
         {
             NewView();
 
@@ -207,7 +215,14 @@ namespace PassShieldPasswordManager
                     Environment.Exit(0);
                     break;
                 case "No":
-                    await ApplicationMenu();
+                    if (isMainMenu)
+                    {
+                        await MainMenu();
+                    }
+                    else
+                    {
+                        await ApplicationMenu();
+                    }
                     break;
             }
         }
@@ -410,7 +425,7 @@ namespace PassShieldPasswordManager
                     await ApplicationMenu();
                     break;
                 case "Exit":
-                    await Exit();
+                    await Exit(true);
                     break;
             }
         }
@@ -643,7 +658,7 @@ namespace PassShieldPasswordManager
             switch (selection)
             {
                 case "Game":
-                    var gameCredential = new CredentialGame
+                    var gameCredential = new CredentialGame(_credentialRepo)
                     {
                         Username = username,
                         Password = password,
@@ -653,7 +668,7 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.AddCredential(gameCredential);
                     break;
                 case "Website":
-                    var websiteCredential = new CredentialWebsite
+                    var websiteCredential = new CredentialWebsite(_credentialRepo)
                     {
                         Username = username,
                         Password = password,
@@ -663,7 +678,7 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.AddCredential(websiteCredential);
                     break;
                 case "Desktop Application":
-                    var desktopAppCredential = new CredentialDesktopApp
+                    var desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
                     {
                         Username = username,
                         Password = password,
@@ -992,7 +1007,7 @@ namespace PassShieldPasswordManager
             switch (selectedCredential)
             {
                 case CredentialGame game:
-                    var gameCredential = new CredentialGame
+                    var gameCredential = new CredentialGame(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
@@ -1003,7 +1018,7 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.EditCredential(gameCredential);
                     break;
                 case CredentialWebsite website:
-                    var websiteCredential = new CredentialWebsite
+                    var websiteCredential = new CredentialWebsite(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
@@ -1014,7 +1029,7 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.EditCredential(websiteCredential);
                     break;
                 case CredentialDesktopApp desktopApp:
-                    var desktopAppCredential = new CredentialDesktopApp
+                    var desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
                         User = _loginSession.User,
@@ -1096,7 +1111,7 @@ namespace PassShieldPasswordManager
             }
             
             passwordGenerator.Length = AnsiConsole.Ask("Enter [green]length[/] of the password :", defaultValue: 12);
-            return new Credential().GenerateRandomPassword(passwordGenerator);
+            return _credential.GenerateRandomPassword(passwordGenerator);
         }
         
         private void NewView()

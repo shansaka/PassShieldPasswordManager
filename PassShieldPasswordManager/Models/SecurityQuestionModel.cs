@@ -1,9 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PassShieldPasswordManager.Models;
 
-public class SecurityQuestions
+public class SecurityQuestionModel
 {
     [Key]
     public int SecurityQuestionId { get; set; }

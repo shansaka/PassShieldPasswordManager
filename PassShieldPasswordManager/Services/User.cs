@@ -1,8 +1,10 @@
+using AutoMapper;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class User 
+public class User
 {
     public int UserId { get; set; }
     public string Name { get; set; }
@@ -13,10 +15,10 @@ public class User
     public DateTime DateCreated { get; set; }
     
     private readonly Credential _credential;
-
-    public User()
+    
+    public User(ICredentialRepo credentialRepo)
     {
-        _credential = new Credential();
+        _credential = new Credential(credentialRepo);
     }
 
     public async Task EditCredential(Credential credential)

@@ -1,21 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using PassShieldPasswordManager.Models;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Repos;
 
-public class UserRepo : IRepository<Users>
+public class UserRepo : IUserRepo
 {
-    private readonly DbConnection _dbConnection;
-
-    public UserRepo()
-    {
-        _dbConnection = DbConnection.Instance;
-    }
+    private readonly DbConnection _dbConnection = DbConnection.Instance;
 
     #region Common Methods
 
-    public async Task<Users> GetById(int id)
+    public async Task<UserModel> GetById(int id)
     {
         try
         {
@@ -28,7 +24,7 @@ public class UserRepo : IRepository<Users>
         }
     }
 
-    public async Task<IEnumerable<Users>> GetAll()
+    public async Task<IEnumerable<UserModel>> GetAll()
     {
         try
         {
@@ -41,7 +37,7 @@ public class UserRepo : IRepository<Users>
         }
     }
 
-    public async Task<Users> Add(Users entity)
+    public async Task<UserModel> Add(UserModel entity)
     {
         try
         {
@@ -56,7 +52,7 @@ public class UserRepo : IRepository<Users>
         }
     }
 
-    public async Task Update(Users entity)
+    public async Task Update(UserModel entity)
     {
         try
         {
@@ -70,7 +66,7 @@ public class UserRepo : IRepository<Users>
         }
     }
 
-    public async Task Delete(Users entity)
+    public async Task Delete(UserModel entity)
     {
         try
         {
@@ -89,7 +85,7 @@ public class UserRepo : IRepository<Users>
     
     #region Custom Methods
 
-    public async Task<Users> Login(string username, string password)
+    public async Task<UserModel> Login(string username, string password)
     {
         try
         {
@@ -108,7 +104,7 @@ public class UserRepo : IRepository<Users>
         }
     }
 
-    public async Task<Users> GetByUsername(string username)
+    public async Task<UserModel> GetByUsername(string username)
     {
         try
         {

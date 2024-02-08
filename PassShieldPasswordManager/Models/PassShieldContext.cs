@@ -1,16 +1,16 @@
 namespace PassShieldPasswordManager.Models;
 using Microsoft.EntityFrameworkCore;
 
-public class Context : DbContext
+public class PassShieldContext : DbContext
 {
-    public DbSet<Users> Users { get; set; }
-    public DbSet<SecurityQuestions> SecurityQuestions { get; set; }
+    public DbSet<UserModel> Users { get; set; }
+    public DbSet<SecurityQuestionModel> SecurityQuestions { get; set; }
     
-    public DbSet<Credentials> Credentials { get; set; }
+    public DbSet<CredentialModel> Credentials { get; set; }
 
     public string DbPath { get; }
 
-    public Context()
+    public PassShieldContext()
     {
         DbPath = "pass_db.db";
     }

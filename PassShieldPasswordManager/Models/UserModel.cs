@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PassShieldPasswordManager.Models;
 
-public class Users
+public class UserModel
 {
     [Key]
     public int UserId { get; set; }

@@ -5,11 +5,11 @@ namespace PassShieldPasswordManager.Utilities;
 public class DbConnection
 {
     private static DbConnection _instance;
-    private readonly Context _database;
+    private readonly PassShieldContext _database;
     
     private DbConnection()
     {
-        _database = new Context();
+        _database = new PassShieldContext();
     }
 
     public static DbConnection Instance
@@ -24,7 +24,7 @@ public class DbConnection
         }
     }
 
-    public Context Database
+    public PassShieldContext Database
     {
         get { return _database; }
     }

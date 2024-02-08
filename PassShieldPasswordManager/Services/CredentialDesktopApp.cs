@@ -1,26 +1,27 @@
+using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class CredentialDesktopApp : Credential, ICredential
+public class CredentialDesktopApp : Credential
 {
     public string DesktopAppName { get; set; }
     
-    private readonly CredentialRepo _credentialRepo;
-
-    public CredentialDesktopApp()
+    private readonly ICredentialRepo _credentialRepo;
+    
+    public CredentialDesktopApp(ICredentialRepo credentialRepo) : base(credentialRepo)
     {
-        _credentialRepo = new CredentialRepo();
+        _credentialRepo = credentialRepo;
     }
-
-
+    
     public async Task Add()
     {
         try
         {
-            var credentials = new Credentials
+            var credentials = new CredentialModel
             {
                 UserId = User.UserId,
                 Username = Username,
@@ -58,4 +59,6 @@ public class CredentialDesktopApp : Credential, ICredential
             throw;
         }
     }
+
+  
 }

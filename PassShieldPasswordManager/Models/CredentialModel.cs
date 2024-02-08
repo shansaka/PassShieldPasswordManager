@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PassShieldPasswordManager.Models;
 
-public class Credentials
+public class CredentialModel
 {
     [Key]
     public int CredentialId { get; set; }
@@ -16,6 +16,6 @@ public class Credentials
     public DateTime UpdatedDate { get; set; }
     public bool IsDeleted { get; set; }
 
-    public Users User { get; set; }
+    public UserModel User { get; set; }
     
 }

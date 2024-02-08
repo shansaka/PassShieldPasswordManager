@@ -1,5 +1,7 @@
+using AutoMapper;
 using PassShieldPasswordManager.Models;
 using PassShieldPasswordManager.Repos;
+using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
@@ -9,18 +11,18 @@ public class CredentialGame : Credential, ICredential
     public string GameName { get; set; }
     public string Developer { get; set; }
     
-    private readonly CredentialRepo _credentialRepo;
+    private readonly ICredentialRepo _credentialRepo;
 
-    public CredentialGame()
+    public CredentialGame(ICredentialRepo credentialRepo) : base(credentialRepo)
     {
-        _credentialRepo = new CredentialRepo();
+        _credentialRepo = credentialRepo;
     }
 
     public async Task Add()
     {
         try
         {
-            var credentials = new Credentials
+            var credentials = new CredentialModel
             {
                 Username = Username,
                 Password = new Encryption(Password).Encrypt(),
