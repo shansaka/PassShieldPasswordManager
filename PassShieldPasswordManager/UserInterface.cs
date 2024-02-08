@@ -658,8 +658,9 @@ namespace PassShieldPasswordManager
             switch (selection)
             {
                 case "Game":
-                    var gameCredential = new CredentialGame(_credentialRepo)
+                    ICredential gameCredential = new CredentialGame(_credentialRepo)
                     {
+                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         GameName = AnsiConsole.Ask<string>("Enter [green]Game Name[/] :"),
@@ -668,8 +669,9 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.AddCredential(gameCredential);
                     break;
                 case "Website":
-                    var websiteCredential = new CredentialWebsite(_credentialRepo)
+                    ICredential websiteCredential = new CredentialWebsite(_credentialRepo)
                     {
+                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         WebsiteName = AnsiConsole.Ask<string>("Enter [green]Website name[/] :"),
@@ -678,8 +680,9 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.AddCredential(websiteCredential);
                     break;
                 case "Desktop Application":
-                    var desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
+                    ICredential desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
                     {
+                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         DesktopAppName = AnsiConsole.Ask<string>("Enter [green]Desktop application name[/] :")
@@ -1007,7 +1010,7 @@ namespace PassShieldPasswordManager
             switch (selectedCredential)
             {
                 case CredentialGame game:
-                    var gameCredential = new CredentialGame(_credentialRepo)
+                    ICredential gameCredential = new CredentialGame(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
@@ -1018,7 +1021,7 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.EditCredential(gameCredential);
                     break;
                 case CredentialWebsite website:
-                    var websiteCredential = new CredentialWebsite(_credentialRepo)
+                    ICredential websiteCredential = new CredentialWebsite(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
                         Username = username,
@@ -1029,10 +1032,9 @@ namespace PassShieldPasswordManager
                     await _loginSession.User.EditCredential(websiteCredential);
                     break;
                 case CredentialDesktopApp desktopApp:
-                    var desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
+                    ICredential desktopAppCredential = new CredentialDesktopApp(_credentialRepo)
                     {
                         CredentialId = selectedCredential.CredentialId,
-                        User = _loginSession.User,
                         Username = username,
                         Password = password,
                         DesktopAppName = AnsiConsole.Ask($"Enter [green]Desktop application name[/] :", defaultValue:desktopApp.DesktopAppName.EscapeMarkup())

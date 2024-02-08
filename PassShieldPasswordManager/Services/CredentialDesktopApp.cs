@@ -6,7 +6,7 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class CredentialDesktopApp : Credential
+public class CredentialDesktopApp : Credential, ICredential
 {
     public string DesktopAppName { get; set; }
     

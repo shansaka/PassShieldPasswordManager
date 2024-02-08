@@ -21,22 +21,11 @@ public class User
         _credential = new Credential(credentialRepo);
     }
 
-    public async Task EditCredential(Credential credential)
+    public async Task EditCredential(ICredential credential)
     {
         try
         {
-            switch (credential)
-            {
-                case CredentialGame game:
-                    await game.Edit();
-                    break;
-                case CredentialWebsite website:
-                    await website.Edit();
-                    break;
-                case CredentialDesktopApp desktopApp:
-                    await desktopApp.Edit();
-                    break;
-            }
+            await _credential.Edit(credential);
         }
         catch (Exception e)
         {
@@ -45,23 +34,11 @@ public class User
         }
     }
     
-    public async Task AddCredential(Credential credential)
+    public async Task AddCredential(ICredential credential)
     {
         try
         {
-            credential.User = this;
-            switch (credential)
-            {
-                case CredentialGame game:
-                    await game.Add();
-                    break;
-                case CredentialWebsite website:
-                    await website.Add();
-                    break;
-                case CredentialDesktopApp desktopApp:
-                    await desktopApp.Add();
-                    break;
-            }
+            await _credential.Add(credential);
         }
         catch (Exception e)
         {

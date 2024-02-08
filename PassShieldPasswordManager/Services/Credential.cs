@@ -7,7 +7,7 @@ using Mapper = PassShieldPasswordManager.Utilities.Mapper;
 
 namespace PassShieldPasswordManager.Services;
 
-public class Credential : ICredential
+public class Credential
 {
     public int CredentialId { get; set; }
     public string Username { get; set; }
@@ -18,7 +18,6 @@ public class Credential : ICredential
     public User User { get; set; }
     
     private readonly ICredentialRepo _credentialRepo;
-    //private readonly IMapper _mapper;
     private readonly Mapper _mapper = new Mapper();
     public Credential(ICredentialRepo credentialRepo)
     {
@@ -66,7 +65,22 @@ public class Credential : ICredential
             throw;
         }
     }
+    
+    public string GenerateRandomPassword(RandomPasswordGenerator passwordGenerator)
+    {
+        return passwordGenerator.Generate();
+    }
 
+    public async Task Add(ICredential credential)
+    {
+        await credential.Add();
+    }
+
+    public async Task Edit(ICredential credential)
+    {
+        await credential.Edit();
+    }
+    
     private List<Credential> MapCredentialTypes(IEnumerable<CredentialModel> credentials)
     {
         var list = new List<Credential>();
@@ -97,20 +111,5 @@ public class Credential : ICredential
             }
         }
         return list;
-    }
-
-    public string GenerateRandomPassword(RandomPasswordGenerator passwordGenerator)
-    {
-        return passwordGenerator.Generate();
-    }
-
-    public Task Add()
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task Edit()
-    {
-        throw new NotImplementedException();
     }
 }
