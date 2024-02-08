@@ -4,7 +4,7 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class CredentialWebsite : Credential
+public class CredentialWebsite : Credential, ICredential
 {
     public string WebsiteName { get; set; }
     public string Url { get; set; }
@@ -16,7 +16,7 @@ public class CredentialWebsite : Credential
         _credentialRepo = new CredentialRepo();
     }
 
-    public async Task Create()
+    public async Task Add()
     {
         try
         {
@@ -39,7 +39,7 @@ public class CredentialWebsite : Credential
         }
     }
 
-    public async Task Update()
+    public async Task Edit()
     {
         try
         {

@@ -5,7 +5,7 @@ using PassShieldPasswordManager.Utilities;
 
 namespace PassShieldPasswordManager.Services;
 
-public class Credential
+public class Credential : ICredential
 {
     public int CredentialId { get; set; }
     public string Username { get; set; }
@@ -98,5 +98,15 @@ public class Credential
     public string GenerateRandomPassword(RandomPasswordGenerator passwordGenerator)
     {
         return passwordGenerator.Generate();
+    }
+
+    public Task Add()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task Edit()
+    {
+        throw new NotImplementedException();
     }
 }

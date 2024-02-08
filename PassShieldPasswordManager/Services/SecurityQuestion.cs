@@ -12,6 +12,7 @@ public class SecurityQuestion
     
     private readonly SecurityQuestionRepo _securityQuestionRepo;
     private readonly IMapper _mapper;
+    
 
     public SecurityQuestion()
     {

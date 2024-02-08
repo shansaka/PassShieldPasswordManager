@@ -26,10 +26,10 @@ public class User
             switch (credential)
             {
                 case CredentialGame game:
-                    await game.Update();
+                    await game.Edit();
                     break;
                 case CredentialWebsite website:
-                    await website.Update();
+                    await website.Edit();
                     break;
                 case CredentialDesktopApp desktopApp:
                     await desktopApp.Edit();
@@ -51,10 +51,10 @@ public class User
             switch (credential)
             {
                 case CredentialGame game:
-                    await game.Create();
+                    await game.Add();
                     break;
                 case CredentialWebsite website:
-                    await website.Create();
+                    await website.Add();
                     break;
                 case CredentialDesktopApp desktopApp:
                     await desktopApp.Add();
