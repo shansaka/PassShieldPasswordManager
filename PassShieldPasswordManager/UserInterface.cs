@@ -16,7 +16,6 @@ namespace PassShieldPasswordManager
         private readonly SecurityQuestion _securityQuestion;
         private readonly Credential _credential;
         
-
         public UserInterface(IUserRepo userRepo, ISecurityQuestionRepo securityQuestionRepo, ICredentialRepo credentialRepo)
         {
             _credentialRepo = credentialRepo;

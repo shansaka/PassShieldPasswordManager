@@ -4,61 +4,65 @@ using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Repos.Interfaces;
 using PassShieldPasswordManager.Utilities;
 
-namespace PassShieldPasswordManager.Services;
-
-public class CredentialDesktopApp : Credential, ICredential
+namespace PassShieldPasswordManager.Services
 {
-    public string DesktopAppName { get; set; }
-    
-    private readonly ICredentialRepo _credentialRepo;
-    
-    public CredentialDesktopApp(ICredentialRepo credentialRepo) : base(credentialRepo)
+    public class CredentialDesktopApp : Credential, ICredential
     {
-        _credentialRepo = credentialRepo;
-    }
-    
-    public async Task Add()
-    {
-        try
+        // Property
+        public string DesktopAppName { get; set; }
+        
+        // Dependency
+        private readonly ICredentialRepo _credentialRepo;
+        
+        // Constructor with repository injection
+        public CredentialDesktopApp(ICredentialRepo credentialRepo) : base(credentialRepo)
         {
-            var credentials = new CredentialModel
-            {
-                UserId = User.UserId,
-                Username = Username,
-                Password = new Encryption(Password).Encrypt(),
-                Name = DesktopAppName,
-                Type = (int)CredentialType.DesktopApp,
-                CreatedDate = DateTime.Now
-            };
-            await _credentialRepo.Add(credentials);
+            _credentialRepo = credentialRepo;
         }
-        catch (Exception e)
+        
+        // Method to add a desktop application credential
+        public async Task Add()
         {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-    
-    public async Task Edit()
-    {
-        try
-        {
-            var credentials = await _credentialRepo.GetById(CredentialId);
-            if (credentials != null)
+            try
             {
-                credentials.Username = Username;
-                credentials.Password = new Encryption(Password).Encrypt();
-                credentials.Name = DesktopAppName;
-                credentials.UpdatedDate = DateTime.Now;
-                await _credentialRepo.Update(credentials);
+                var credentials = new CredentialModel
+                {
+                    UserId = User.UserId,
+                    Username = Username,
+                    Password = new Encryption(Password).Encrypt(),
+                    Name = DesktopAppName,
+                    Type = (int)CredentialType.DesktopApp,
+                    CreatedDate = DateTime.Now
+                };
+                await _credentialRepo.Add(credentials);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
-        catch (Exception e)
+        
+        // Method to edit a desktop application credential
+        public async Task Edit()
         {
-            Console.WriteLine(e);
-            throw;
+            try
+            {
+                var credentials = await _credentialRepo.GetById(CredentialId);
+                if (credentials != null)
+                {
+                    credentials.Username = Username;
+                    credentials.Password = new Encryption(Password).Encrypt();
+                    credentials.Name = DesktopAppName;
+                    credentials.UpdatedDate = DateTime.Now;
+                    await _credentialRepo.Update(credentials);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
-
-  
 }
