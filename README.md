@@ -13,3 +13,7 @@ Database has default admin login since you can't register as an admin. But syste
 Default Admin: 
 * Username: admin
 * Password: admin
+
+# Technologies
+* Programming Language: .NET, C#
+* Database: SQLite
