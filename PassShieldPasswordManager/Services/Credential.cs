@@ -103,6 +103,7 @@ namespace PassShieldPasswordManager.Services
                         credentialGame = _mapper.MapToCredential(item, credentialGame);
                         credentialGame.GameName = item.Name;
                         credentialGame.Developer = item.UrlOrDeveloper;
+                        credentialGame.User = _mapper.MapToUser(item.User, new User(_credentialRepo));
                         list.Add(credentialGame);
                         break;
                     case (int)CredentialType.Website:
@@ -110,12 +111,14 @@ namespace PassShieldPasswordManager.Services
                         credentialWebsite = _mapper.MapToCredential(item, credentialWebsite);
                         credentialWebsite.WebsiteName = item.Name;
                         credentialWebsite.Url = item.UrlOrDeveloper;
+                        credentialWebsite.User = _mapper.MapToUser(item.User, new User(_credentialRepo));
                         list.Add(credentialWebsite);
                         break;
                     case (int)CredentialType.DesktopApp:
                         var credentialDesktopApp = new CredentialDesktopApp(_credentialRepo);
                         credentialDesktopApp = _mapper.MapToCredential(item, credentialDesktopApp);
                         credentialDesktopApp.DesktopAppName = item.Name;
+                        credentialDesktopApp.User = _mapper.MapToUser(item.User, new User(_credentialRepo));
                         list.Add(credentialDesktopApp);
                         break;
                 }
