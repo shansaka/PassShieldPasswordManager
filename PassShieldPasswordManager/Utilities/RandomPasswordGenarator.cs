@@ -1,37 +1,47 @@
-namespace PassShieldPasswordManager.Utilities;
-
-public class RandomPasswordGenerator
+namespace PassShieldPasswordManager.Utilities
 {
-    public int Length { get; set; }
-    public bool IncludeUppercase { get; set; }
-    public bool IncludeDigits { get; set; }
-    public bool IncludeSpecialChars { get; set; }
-
-    private const string LowercaseChars = "abcdefghijklmnopqrstuvwxyz";
-    private const string UppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private const string Digits = "0123456789";
-    private const string SpecialChars = "!@#$%^&*()-_=+";
-    
-    public string Generate()
+    // Class for generating random passwords
+    public class RandomPasswordGenerator
     {
-        var validChars = LowercaseChars;
+        // Properties
+        public int Length { get; set; } 
+        public bool IncludeUppercase { get; set; } 
+        public bool IncludeDigits { get; set; }
+        public bool IncludeSpecialChars { get; set; } 
 
-        if (IncludeUppercase)
-            validChars += UppercaseChars;
+        // Constants for character sets
+        private const string LowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+        private const string UppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        private const string Digits = "0123456789";
+        private const string SpecialChars = "!@#$%^&*()-_=+";
 
-        if (IncludeDigits)
-            validChars += Digits;
-
-        if (IncludeSpecialChars)
-            validChars += SpecialChars;
-        
-        var random = new Random();
-        var chars = new char[Length];
-        for (var i = 0; i < Length; i++)
+        // Method to generate a random password
+        public string Generate()
         {
-            chars[i] = validChars[random.Next(0, validChars.Length)];
-        }
+            // Valid characters for password generation
+            var validChars = LowercaseChars;
 
-        return new string(chars);
+            // Include uppercase characters if specified
+            if (IncludeUppercase)
+                validChars += UppercaseChars;
+
+            // Include digits if specified
+            if (IncludeDigits)
+                validChars += Digits;
+
+            // Include special characters if specified
+            if (IncludeSpecialChars)
+                validChars += SpecialChars;
+            
+            // Generate random password using valid characters
+            var random = new Random();
+            var chars = new char[Length];
+            for (var i = 0; i < Length; i++)
+            {
+                chars[i] = validChars[random.Next(0, validChars.Length)];
+            }
+
+            return new string(chars);
+        }
     }
 }

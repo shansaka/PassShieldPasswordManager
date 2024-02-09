@@ -1,14 +1,14 @@
-﻿using AutoMapper;
-using PassShieldPasswordManager;
+﻿using PassShieldPasswordManager;
 using PassShieldPasswordManager.Repos;
 using PassShieldPasswordManager.Repos.Interfaces;
-using PassShieldPasswordManager.Utilities;
 
-// Dependency injection 
-IUserRepo userRepo = new UserRepo();
-ISecurityQuestionRepo securityQuestionRepo = new SecurityQuestionRepo();
-ICredentialRepo credentialRepo = new CredentialRepo();
+// Creating instances of repositories
+IUserRepo userRepo = new UserRepo(); 
+ISecurityQuestionRepo securityQuestionRepo = new SecurityQuestionRepo(); 
+ICredentialRepo credentialRepo = new CredentialRepo(); 
 
-// Running the User Interface
+// Creating an instance of the user interface
 var ui = new UserInterface(userRepo, securityQuestionRepo, credentialRepo);
+
+// Running the user interface
 await ui.Run();
